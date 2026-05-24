@@ -21,6 +21,7 @@ def finetune(
         training_data_filename: Optional[str] = None,
         model_name: str = '',
 ) -> torch.nn.Module:
+    """Helper function for supervised_finetune_audio_movement_projector."""
 
     if training_features is None:
         if training_data_filename is not None:

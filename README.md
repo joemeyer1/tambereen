@@ -111,7 +111,7 @@ File structure:
             Containers for data (synchronizing frames in different modalities across chunks of time)
 
         trainers
-            Train models according to input specs (“user_params”)
+            Train models
 
         utils.py
             Defines utility functions
