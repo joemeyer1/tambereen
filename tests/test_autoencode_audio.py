@@ -11,7 +11,7 @@ from src.trainers.train_audio_movement_projector import AudioMovementProjector
 from src.utils import play_audio
 
 
-def test_autoencode_audio(audio_file_path: str = 'banana-shaker__long_forte_shaken.wav') -> None:
+def test_autoencode_audio(audio_file_path: str = '../../audio_training_data/percussion/banana-shaker__long_forte_shaken.wav') -> None:
 
     # play_audio(audio_file_path)  # play original audio for comparison
 
@@ -30,5 +30,5 @@ def test_autoencode_audio(audio_file_path: str = 'banana-shaker__long_forte_shak
 
 
 if __name__ == '__main__':
-    test_autoencode_audio(audio_file_path='banana-shaker__long_forte_shaken.wav')
+    test_autoencode_audio(audio_file_path='../../audio_training_data/percussion/banana-shaker__long_forte_shaken.wav')
 
