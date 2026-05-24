@@ -15,8 +15,8 @@ from tqdm import tqdm
 
 from src.model_managers.rave_loader import RaveLoader
 from src.projectors.audio_movement_projector import AudioMovementProjector
-from src.latent_novelification.novelifier import Novelifier
-from src.latent_novelification.embeddings_assessor import EmbeddingsAssessor
+from src.projectors.novelifier import Novelifier
+from src.trainers._embeddings_assessor import EmbeddingsAssessor
 from src.utils import get_audio_data, make_name_unique, CustomDataset
 
 from run_settings import RunSettings
@@ -113,8 +113,8 @@ class NovelifierTrainer(EmbeddingsAssessor):
         stability_optimizer = torch.optim.Adam(stability_module.parameters(), lr=.001, maximize=True)
 
         name_to_optim_objective = {
-            'divergence': (divergence_optimizer, self._divergence),
-            'stability': (stability_optimizer, self._stability),
+            'divergence': (divergence_optimizer, self.assess_divergence),
+            'stability': (stability_optimizer, self.assess_stability),
             None: (super_optimizer, self.assess_transformed_embeddings)
         }
         self._train_modules(
@@ -235,40 +235,12 @@ class NovelifierTrainer(EmbeddingsAssessor):
                     sf.write(make_name_unique(f'{novelified_audio_over_training_dir}/epoch.wav'), data=epoch_audio, samplerate=44100)
                 sf.write(make_name_unique(f'{novelified_audio_over_training_dir}/full_evolving_novelified_audio.wav'), data=np.concatenate(evolving_novelified_audio), samplerate=44100)
 
-    def _divergence(
-        self,
-        embeddings_original: torch.Tensor,
-        embeddings_silence: torch.Tensor,
-        embeddings_transformed: torch.Tensor,
-        embeddings_transformed_prime: torch.Tensor,
-        embeddings_ref: torch.Tensor,
-        embeddings_ref_transformed: torch.Tensor,
-    ) -> float:
-        embeddings_transformed_formatted = embeddings_transformed.transpose(0, 1).expand(1, -1, -1)
-
-        novelty = self.assess_novelty(embeddings_transformed=embeddings_transformed, embeddings_ref=embeddings_ref) + self.assess_novelty(embeddings_transformed=abs(embeddings_transformed), embeddings_ref=abs(embeddings_ref))
-        diversity = self.assess_diversity(embeddings_transformed=embeddings_transformed, embeddings_ref_transformed=embeddings_ref_transformed) + self.assess_diversity(embeddings_transformed=abs(embeddings_transformed), embeddings_ref_transformed=abs(embeddings_ref_transformed))
-        transformation_depth = self.assess_transformation_depth(embeddings_transformed=embeddings_transformed, embeddings_original=embeddings_original) + self.assess_transformation_depth(embeddings_transformed=abs(embeddings_transformed), embeddings_original=abs(embeddings_original))
-        nonsilence = self.assess_nonsilence(embeddings_transformed_formatted=embeddings_transformed_formatted, embeddings_silence=embeddings_silence) + self.assess_nonsilence(embeddings_transformed_formatted=abs(embeddings_transformed_formatted), embeddings_silence=abs(embeddings_silence))
-        return novelty + diversity + transformation_depth + nonsilence
-
-    def _stability(
-        self,
-        embeddings_original: torch.Tensor,
-        embeddings_silence: torch.Tensor,
-        embeddings_transformed: torch.Tensor,
-        embeddings_transformed_prime: torch.Tensor,
-        embeddings_ref: torch.Tensor,
-        embeddings_ref_transformed: torch.Tensor,
-    ) -> float:
-        embeddings_transformed_formatted = embeddings_transformed.transpose(0, 1).expand(1, -1, -1)
-        return self.assess_stability(embeddings_transformed_formatted=embeddings_transformed_formatted, embeddings_transformed_prime=embeddings_transformed_prime)
-
     def _compute_objective(
             self,
             embeddings_original: torch.Tensor,
             embeddings_ref: torch.Tensor,
-            novelifier: Novelifier, objective: Callable,
+            novelifier: Novelifier,
+            objective: Callable,
             submodule_name: Optional[str] = None,
             evolving_novelified_audio: Optional[List[np.ndarray]] = None,
     ) -> torch.Tensor:
