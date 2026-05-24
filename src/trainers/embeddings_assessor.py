@@ -10,6 +10,7 @@ from torch.nn.functional import mse_loss as mse
 
 
 class EmbeddingsAssessor:
+    """Helper class for train_audio_novelifier."""
 
     def __init__(self, instability_tolerance: float = 1.2):
         assert instability_tolerance > 0
