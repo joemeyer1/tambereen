@@ -16,7 +16,7 @@ from tqdm import tqdm
 from src.model_managers.rave_loader import RaveLoader
 from src.projectors.audio_movement_projector import AudioMovementProjector
 from src.projectors.novelifier import Novelifier
-from src.trainers.embeddings_assessor import EmbeddingsAssessor
+from src.trainers._embeddings_assessor import EmbeddingsAssessor
 from src.utils import get_audio_data, make_name_unique, CustomDataset
 
 from run_settings import RunSettings
