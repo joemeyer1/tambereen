@@ -17,4 +17,4 @@ def test_interact_from_pretrained(model_dir_path: str):
 
 
 if __name__ == '__main__':
-    test_interact_from_pretrained(model_dir_path='output_data_runs/28')
+    test_interact_from_pretrained(model_dir_path='output_data_runs/0')

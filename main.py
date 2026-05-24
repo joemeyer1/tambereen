@@ -14,7 +14,7 @@ from src.scripts.run_tambereen import run_tambereen  # train with standard epoch
 def main():
     return run_tambereen()  # train new tambereen model (standard epochs, standard data)
     # return test_tambereen()  # train new tambereen model (few epochs, little data)
-    # return test_interact_from_pretrained(model_dir_path='output_data_runs/28')    
+    # return test_interact_from_pretrained(model_dir_path='output_data_runs/0')    
     # return run_all_tests()
 
 

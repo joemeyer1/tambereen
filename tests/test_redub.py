@@ -7,8 +7,8 @@ import ffmpeg
 
 
 def test_redub(
-    video_path: str = "interact_movement0.mp4",
-    audio_path: str = "rave_output/822/samples/1_0,5_novelified_audio0.wav",
+    video_path: str = "output_data_runs/0/soundless_movement_output/interact_movement0.mp4",
+    audio_path: str = "output_data_runs/0/audio_output/interact_movement_to_audio0_novelified0.mp4",
     output_path: Optional[str] = None,
 ):
 

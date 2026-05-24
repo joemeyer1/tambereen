@@ -12,7 +12,7 @@ from src.utils import make_name_unique
 from run_settings import RunSettings, AudioMovementProjectorSettings
 
 
-def test_finetuning(model_dirname: str = 'rave_output/1311', finetuning_path: str = 'ground_ctrl.mp4', run_settings: RunSettings = RunSettings(audio_novelifier_settings=AudioMovementProjectorSettings(EPOCHS=10))) -> None:
+def test_finetuning(model_dirname: str = 'output_data_runs/0', finetuning_path: str = 'output_data_runs/0/movement_output/interact_movement0.mp4', run_settings: RunSettings = RunSettings(audio_novelifier_settings=AudioMovementProjectorSettings(EPOCHS=10))) -> None:
     output_dir_path = make_name_unique('output_data_runs/')
     os.mkdir(output_dir_path)
 
