@@ -9,7 +9,7 @@ from src.model_managers.model_file_manager import ModelFileManager
 from src.projectors.audio_movement_projector import AudioMovementProjector
 from src.projectors.data_normalizer import DataNormalizer
 from src.streamers.movement_streamer import MovementStreamer
-from src.trainers.finetune_model import finetune
+from src.trainers.finetune import finetune
 from src.utils import resize_tensor
 
 
