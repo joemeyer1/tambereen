@@ -92,9 +92,6 @@ File structure:
         Calls main script to run Tambereen (by default, calls src.scripts.run_tambereen.py)
 
     src
-        latent_novelification
-            Defines novelifier
-
         model_managers
             Manage saving and loading models
 
