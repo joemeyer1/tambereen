@@ -35,6 +35,35 @@ class EmbeddingsAssessor:
         reward = novelty + diversity + transformation_depth + nonsilence + stability
         return reward
 
+    def assess_divergence(
+        self,
+        embeddings_original: torch.Tensor,
+        embeddings_silence: torch.Tensor,
+        embeddings_transformed: torch.Tensor,
+        embeddings_transformed_prime: torch.Tensor,
+        embeddings_ref: torch.Tensor,
+        embeddings_ref_transformed: torch.Tensor,
+    ) -> float:
+        embeddings_transformed_formatted = embeddings_transformed.transpose(0, 1).expand(1, -1, -1)
+
+        novelty = self.assess_novelty(embeddings_transformed=embeddings_transformed, embeddings_ref=embeddings_ref) + self.assess_novelty(embeddings_transformed=abs(embeddings_transformed), embeddings_ref=abs(embeddings_ref))
+        diversity = self.assess_diversity(embeddings_transformed=embeddings_transformed, embeddings_ref_transformed=embeddings_ref_transformed) + self.assess_diversity(embeddings_transformed=abs(embeddings_transformed), embeddings_ref_transformed=abs(embeddings_ref_transformed))
+        transformation_depth = self.assess_transformation_depth(embeddings_transformed=embeddings_transformed, embeddings_original=embeddings_original) + self.assess_transformation_depth(embeddings_transformed=abs(embeddings_transformed), embeddings_original=abs(embeddings_original))
+        nonsilence = self.assess_nonsilence(embeddings_transformed_formatted=embeddings_transformed_formatted, embeddings_silence=embeddings_silence) + self.assess_nonsilence(embeddings_transformed_formatted=abs(embeddings_transformed_formatted), embeddings_silence=abs(embeddings_silence))
+        return novelty + diversity + transformation_depth + nonsilence
+
+    def assess_stability(
+        self,
+        embeddings_original: torch.Tensor,
+        embeddings_silence: torch.Tensor,
+        embeddings_transformed: torch.Tensor,
+        embeddings_transformed_prime: torch.Tensor,
+        embeddings_ref: torch.Tensor,
+        embeddings_ref_transformed: torch.Tensor,
+    ) -> float:
+        embeddings_transformed_formatted = embeddings_transformed.transpose(0, 1).expand(1, -1, -1)
+        return self.assess_stability(embeddings_transformed_formatted=embeddings_transformed_formatted, embeddings_transformed_prime=embeddings_transformed_prime)
+
     def assess_novelty(self, embeddings_transformed: torch.Tensor, embeddings_ref: torch.Tensor):
         return log(mae(embeddings_transformed, embeddings_ref) + 1) * self.instability_tolerance - 1 / (sqrt(mae(embeddings_transformed, embeddings_ref)) + 1)
 
