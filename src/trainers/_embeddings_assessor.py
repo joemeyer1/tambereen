@@ -27,11 +27,11 @@ class EmbeddingsAssessor:
     ):
         embeddings_transformed_formatted = embeddings_transformed.transpose(0, 1).expand(1, -1, -1)
 
-        novelty = self.assess_novelty(embeddings_transformed=embeddings_transformed, embeddings_ref=embeddings_ref) + self.assess_novelty(embeddings_transformed=abs(embeddings_transformed), embeddings_ref=abs(embeddings_ref))
-        diversity = self.assess_diversity(embeddings_transformed=embeddings_transformed, embeddings_ref_transformed=embeddings_ref_transformed) + self.assess_diversity(embeddings_transformed=abs(embeddings_transformed), embeddings_ref_transformed=abs(embeddings_ref_transformed))
-        transformation_depth = self.assess_transformation_depth(embeddings_transformed=embeddings_transformed, embeddings_original=embeddings_original) + self.assess_transformation_depth(embeddings_transformed=abs(embeddings_transformed), embeddings_original=abs(embeddings_original))
-        nonsilence = self.assess_nonsilence(embeddings_transformed_formatted=embeddings_transformed_formatted, embeddings_silence=embeddings_silence) + self.assess_nonsilence(embeddings_transformed_formatted=abs(embeddings_transformed_formatted), embeddings_silence=abs(embeddings_silence))
-        stability = self.assess_stability(embeddings_transformed_formatted=embeddings_transformed_formatted, embeddings_transformed_prime=embeddings_transformed_prime)
+        novelty = self._assess_novelty(embeddings_transformed=embeddings_transformed, embeddings_ref=embeddings_ref) + self._assess_novelty(embeddings_transformed=abs(embeddings_transformed), embeddings_ref=abs(embeddings_ref))
+        diversity = self._assess_diversity(embeddings_transformed=embeddings_transformed, embeddings_ref_transformed=embeddings_ref_transformed) + self._assess_diversity(embeddings_transformed=abs(embeddings_transformed), embeddings_ref_transformed=abs(embeddings_ref_transformed))
+        transformation_depth = self._assess_transformation_depth(embeddings_transformed=embeddings_transformed, embeddings_original=embeddings_original) + self._assess_transformation_depth(embeddings_transformed=abs(embeddings_transformed), embeddings_original=abs(embeddings_original))
+        nonsilence = self._assess_nonsilence(embeddings_transformed_formatted=embeddings_transformed_formatted, embeddings_silence=embeddings_silence) + self._assess_nonsilence(embeddings_transformed_formatted=abs(embeddings_transformed_formatted), embeddings_silence=abs(embeddings_silence))
+        stability = self._assess_stability(embeddings_transformed_formatted=embeddings_transformed_formatted, embeddings_transformed_prime=embeddings_transformed_prime)
 
         reward = novelty + diversity + transformation_depth + nonsilence + stability
         return reward
@@ -47,10 +47,10 @@ class EmbeddingsAssessor:
     ) -> float:
         embeddings_transformed_formatted = embeddings_transformed.transpose(0, 1).expand(1, -1, -1)
 
-        novelty = self.assess_novelty(embeddings_transformed=embeddings_transformed, embeddings_ref=embeddings_ref) + self.assess_novelty(embeddings_transformed=abs(embeddings_transformed), embeddings_ref=abs(embeddings_ref))
-        diversity = self.assess_diversity(embeddings_transformed=embeddings_transformed, embeddings_ref_transformed=embeddings_ref_transformed) + self.assess_diversity(embeddings_transformed=abs(embeddings_transformed), embeddings_ref_transformed=abs(embeddings_ref_transformed))
-        transformation_depth = self.assess_transformation_depth(embeddings_transformed=embeddings_transformed, embeddings_original=embeddings_original) + self.assess_transformation_depth(embeddings_transformed=abs(embeddings_transformed), embeddings_original=abs(embeddings_original))
-        nonsilence = self.assess_nonsilence(embeddings_transformed_formatted=embeddings_transformed_formatted, embeddings_silence=embeddings_silence) + self.assess_nonsilence(embeddings_transformed_formatted=abs(embeddings_transformed_formatted), embeddings_silence=abs(embeddings_silence))
+        novelty = self._assess_novelty(embeddings_transformed=embeddings_transformed, embeddings_ref=embeddings_ref) + self._assess_novelty(embeddings_transformed=abs(embeddings_transformed), embeddings_ref=abs(embeddings_ref))
+        diversity = self._assess_diversity(embeddings_transformed=embeddings_transformed, embeddings_ref_transformed=embeddings_ref_transformed) + self._assess_diversity(embeddings_transformed=abs(embeddings_transformed), embeddings_ref_transformed=abs(embeddings_ref_transformed))
+        transformation_depth = self._assess_transformation_depth(embeddings_transformed=embeddings_transformed, embeddings_original=embeddings_original) + self._assess_transformation_depth(embeddings_transformed=abs(embeddings_transformed), embeddings_original=abs(embeddings_original))
+        nonsilence = self._assess_nonsilence(embeddings_transformed_formatted=embeddings_transformed_formatted, embeddings_silence=embeddings_silence) + self._assess_nonsilence(embeddings_transformed_formatted=abs(embeddings_transformed_formatted), embeddings_silence=abs(embeddings_silence))
         return novelty + diversity + transformation_depth + nonsilence
 
     def assess_stability(
@@ -63,19 +63,19 @@ class EmbeddingsAssessor:
         embeddings_ref_transformed: torch.Tensor,
     ) -> float:
         embeddings_transformed_formatted = embeddings_transformed.transpose(0, 1).expand(1, -1, -1)
-        return self.assess_stability(embeddings_transformed_formatted=embeddings_transformed_formatted, embeddings_transformed_prime=embeddings_transformed_prime)
+        return self._assess_stability(embeddings_transformed_formatted=embeddings_transformed_formatted, embeddings_transformed_prime=embeddings_transformed_prime)
 
-    def assess_novelty(self, embeddings_transformed: torch.Tensor, embeddings_ref: torch.Tensor):
+    def _assess_novelty(self, embeddings_transformed: torch.Tensor, embeddings_ref: torch.Tensor):
         return log(mae(embeddings_transformed, embeddings_ref) + 1) * self.instability_tolerance - 1 / (sqrt(mae(embeddings_transformed, embeddings_ref)) + 1)
 
-    def assess_diversity(self, embeddings_transformed: torch.Tensor, embeddings_ref_transformed: torch.Tensor):
+    def _assess_diversity(self, embeddings_transformed: torch.Tensor, embeddings_ref_transformed: torch.Tensor):
         return log(mae(embeddings_transformed, embeddings_ref_transformed) + 1) * self.instability_tolerance - 1 / (sqrt(mae(embeddings_transformed, embeddings_ref_transformed)) + 1)
 
-    def assess_transformation_depth(self, embeddings_transformed: torch.Tensor, embeddings_original: torch.Tensor):
+    def _assess_transformation_depth(self, embeddings_transformed: torch.Tensor, embeddings_original: torch.Tensor):
         return log(mae(embeddings_transformed, embeddings_original) + 1) * self.instability_tolerance - 1 / (sqrt(mae(embeddings_transformed, embeddings_original)) + 1)
 
-    def assess_nonsilence(self, embeddings_transformed_formatted: torch.Tensor, embeddings_silence: torch.Tensor):
+    def _assess_nonsilence(self, embeddings_transformed_formatted: torch.Tensor, embeddings_silence: torch.Tensor):
         return log(mae(embeddings_transformed_formatted, embeddings_silence) + 1) * self.instability_tolerance - 1 / (sqrt(mae(embeddings_transformed_formatted, embeddings_silence)) + 1)
 
-    def assess_stability(self, embeddings_transformed_formatted: torch.Tensor, embeddings_transformed_prime: torch.Tensor):
+    def _assess_stability(self, embeddings_transformed_formatted: torch.Tensor, embeddings_transformed_prime: torch.Tensor):
         return -mse(embeddings_transformed_formatted, embeddings_transformed_prime)  # negative because we want higher to mean more consistent
