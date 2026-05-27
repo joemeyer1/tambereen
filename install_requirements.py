@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-# Copyright (c) 2024 Joseph Meyer. All Rights Reserved.
+# Copyright (c) 2024-2026 Joseph Meyer. MIT License.
 
 
 import os
