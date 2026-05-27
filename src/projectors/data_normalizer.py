@@ -1,4 +1,4 @@
-# Copyright (c) 2025 Joseph Meyer. All Rights Reserved.
+# Copyright (c) 2025 Joseph Meyer. MIT License.
 #!/usr/bin/env python3
 
 
