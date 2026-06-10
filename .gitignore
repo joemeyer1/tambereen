@@ -12,6 +12,7 @@ audio_training_data/*
 metrics_out/*
 
 *.app
+*.zip
 
 *.mp4
 *.png
