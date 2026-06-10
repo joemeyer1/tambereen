@@ -75,6 +75,7 @@ class FileWriter(StreamerBase):
         
         if not self.run_settings.audio_movement_projector_settings.PYTHON_PLAY_AUDIO:
             os.system(f"cp interfaces/out.wav {audio_output_filename.replace('.', '_mixed.')}")
+            os.system(f"mv interfaces/out.wav interfaces/out0.wav")
 
     def write_movement_to_file(
         self,
