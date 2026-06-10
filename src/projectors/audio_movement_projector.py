@@ -86,10 +86,12 @@ class AudioMovementProjector(MovementProjector, KeypointsProjector, AudioProject
             if self.novelifier is not None:
                 audio_embeddings_novelified = torch.squeeze(self.novelifier.forward(audio_embeddings))
                 audio_embedding_novelified_str = ' '.join(str(i) for i in audio_embeddings_novelified.tolist())
+                audio_embedding_novelified_str = audio_embedding_novelified_str.replace('[', '').replace(']', '').replace(',', '')
                 self.osc.send_message(f"{self.address}_novel", audio_embedding_novelified_str)
 
             audio_embeddings = torch.squeeze(audio_embeddings, dim=1)
             audio_embedding_str = ' '.join(str(i) for i in audio_embeddings.tolist())
+            audio_embedding_str = audio_embedding_str.replace('[', '').replace(']', '').replace(',', '')
             self.osc.send_message(self.address, audio_embedding_str)
             if self.novelifier is None:
                 self.osc.send_message(f"{self.address}_novel", audio_embedding_str)
