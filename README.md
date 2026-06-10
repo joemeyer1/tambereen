@@ -23,31 +23,33 @@ To set up (on a Mac):
     - Click "Download Zip"
     - After repository has downloaded, go to your "Downloads" folder and double-click the zip file
 
-2. Download python (version 3.8.17): https://www.python.org/downloads/release/python-3810/
-
-3. Optional, but recommended -- Download the free trial version of Max MSP (it allows you to use the Max interface): https://cycling74.com/downloads 
+2. Optional, but recommended -- Download the free trial version of Max MSP (it allows you to use the Max interface): https://cycling74.com/downloads 
 
     [If you don't want to download Max, set the "AudioMovementProjectorSettings.PYTHON_PLAY_AUDIO" variable in run_settings.py to "True", and "AudioMovementProjectorSettings.AUDIO_FRAMES_PER_CHUNK" in "run_settings.py" to 10, and the program will use python to play the audio instead of using Max. But Warning: If you use python instead of Max to play the audio, the live audio you hear during interaction -- though not the audio recorded to file -- will be choppy and delayed, and you won't be able to use the novelification interface which is implemented in Max.]
 
-4. Open "Terminal" application (it is in your "Applications" folder in "Finder")
+3. Open "Terminal" application (it is in your "Applications" folder in "Finder")
 
-5. Navigate to the downloaded GitHub folder in Terminal
+4. Navigate to the downloaded GitHub folder in Terminal
 
     If you aren't familiar with Git or Python, do the following:
     
     - Type ```cd Downloads/tambereen-main``` into Terminal window, then press "Enter" key
     
-6. Copy the following block of commands into Terminal window, then press "Enter" key:
+5. Copy the following block of commands into Terminal window, then press "Enter" key:
 
     ```
-    virtualenv env --python=python3.8
+    command -v brew &>/dev/null || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    brew install python@3.9
+
+    python3.9 -m venv env
    
     source env/bin/activate
    
     python install_requirements.py
     ```
 
-7. Now the software is installed. To run it:
+6. Now the software is installed. To run it:
     - Type ```python main.py``` into Terminal window, then press "Enter" key. 
 
 
