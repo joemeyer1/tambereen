@@ -1,1 +1,1 @@
-open thispatcherfolder "Macintosh HD:/Users/ash/Documents/Max 8/Packages/nn_tilde 3"include "Macintosh HD:/Users/ash/Documents/GitHub/tambereen/interfaces/percussion.ts"
+open thispatcherinclude "Macintosh HD:/Users/joemeyer/Documents/tambereen/interfaces/musicnet.ts"folder "Macintosh HD:/Users/joemeyer/Documents/Max 9/Packages/nn_tilde"
