@@ -61,6 +61,11 @@ class FileWriter(StreamerBase):
         return
 
     def write_audio_to_file(self, audio_output_filename: str, time_chunks: List[TimeChunk], audio_sample_rate: int, model_dir: str) -> None:
+
+        if not self.run_settings.audio_movement_projector_settings.PYTHON_PLAY_AUDIO:
+            os.system(f"cp interfaces/out.wav {audio_output_filename.replace('.', '_mixed.')}")
+            os.system(f"mv interfaces/out.wav interfaces/out0.wav")
+        
         pd.DataFrame(torch.concatenate([time_chunk.audio_chunk.embedding_frames for time_chunk in time_chunks])).to_csv(make_name_unique(f"{model_dir}/audio_output/audio_embeddings.csv"))
         audio_movement_projector = ModelFileManager.load_model_back_compat(f"{model_dir}/model")
         if audio_movement_projector.novelifier is not None:
@@ -72,10 +77,6 @@ class FileWriter(StreamerBase):
         audio_chunks = torch.concatenate([audio_movement_projector.decode_audio_embs(time_chunk.audio_chunk.embedding_frames.expand(1, -1, -1).transpose(1, 2)) for time_chunk in time_chunks])
         audio_chunks = audio_chunks.flatten()
         sf.write(audio_output_filename, audio_chunks, audio_sample_rate)
-        
-        if not self.run_settings.audio_movement_projector_settings.PYTHON_PLAY_AUDIO:
-            os.system(f"cp interfaces/out.wav {audio_output_filename.replace('.', '_mixed.')}")
-            os.system(f"mv interfaces/out.wav interfaces/out0.wav")
 
     def write_movement_to_file(
         self,
