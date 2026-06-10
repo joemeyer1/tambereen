@@ -300,18 +300,6 @@
 			}
 , 			{
 				"box" : 				{
-					"id" : "obj-44",
-					"linecount" : 4,
-					"maxclass" : "comment",
-					"numinlets" : 1,
-					"numoutlets" : 0,
-					"patching_rect" : [ 1003.5, 824.0, 157.0, 60.0 ],
-					"text" : "*Thanks to Shuoyang Jasper Zheng for the initial  RAVE decoder patch this interface is based on"
-				}
-
-			}
-, 			{
-				"box" : 				{
 					"id" : "obj-20",
 					"maxclass" : "button",
 					"numinlets" : 1,
