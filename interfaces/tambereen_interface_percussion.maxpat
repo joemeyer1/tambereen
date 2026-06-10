@@ -16,6 +16,18 @@
 		"toolbarvisible" : 0,
 		"boxes" : [ 			{
 				"box" : 				{
+					"id" : "obj-39",
+					"maxclass" : "newobj",
+					"numinlets" : 1,
+					"numoutlets" : 1,
+					"outlettype" : [ "" ],
+					"patching_rect" : [ 746.0, 366.0, 83.0, 22.0 ],
+					"text" : "loadmess 100"
+				}
+
+			}
+, 			{
+				"box" : 				{
 					"id" : "obj-73",
 					"maxclass" : "button",
 					"numinlets" : 1,
@@ -88,7 +100,7 @@
 					"patching_rect" : [ 1384.863520681858063, 218.401527047157288, 243.939372420310974, 22.196945905685425 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 687.75, 156.0, 275.757551431655884, 19.696967959403992 ],
-					"text" : "0 1.2 -0.6 16"
+					"text" : "0. 1. -1.2 0.4"
 				}
 
 			}
@@ -100,7 +112,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 565.25, 460.0, 29.5, 22.0 ],
-					"text" : "0."
+					"text" : "1."
 				}
 
 			}
@@ -318,7 +330,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 36.0, 602.0, 61.0, 51.0 ],
+					"patching_rect" : [ 36.0, 587.0, 61.0, 51.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 481.600007176399231, 254.400003790855408, 80.000001192092896, 29.0 ],
 					"text" : "On / Off"
@@ -533,7 +545,7 @@
 					"numoutlets" : 1,
 					"outlettype" : [ "" ],
 					"patching_rect" : [ 1153.0, 297.0, 191.0, 22.0 ],
-					"text" : "0 1.2 -0.6 16"
+					"text" : "0. 1. -1.2 0.4"
 				}
 
 			}
@@ -589,21 +601,10 @@
 					"numinlets" : 1,
 					"numoutlets" : 1,
 					"outlettype" : [ "float" ],
-					"parameter_enable" : 1,
+					"parameter_enable" : 0,
 					"patching_rect" : [ 611.0, 398.0, 40.0, 40.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 427.000004887580872, 317.600004732608795, 45.60000067949295, 45.60000067949295 ],
-					"saved_attribute_attributes" : 					{
-						"valueof" : 						{
-							"parameter_longname" : "dial",
-							"parameter_mmax" : 200.0,
-							"parameter_modmode" : 0,
-							"parameter_shortname" : "dial",
-							"parameter_type" : 0
-						}
-
-					}
-,
 					"size" : 200.0,
 					"varname" : "dial"
 				}
@@ -908,16 +909,8 @@
 			}
 , 			{
 				"patchline" : 				{
-					"destination" : [ "obj-16", 0 ],
-					"order" : 1,
-					"source" : [ "obj-14", 0 ]
-				}
-
-			}
-, 			{
-				"patchline" : 				{
 					"destination" : [ "obj-23", 0 ],
-					"order" : 2,
+					"order" : 1,
 					"source" : [ "obj-14", 0 ]
 				}
 
@@ -974,7 +967,16 @@
 			}
 , 			{
 				"patchline" : 				{
+					"destination" : [ "obj-16", 0 ],
+					"order" : 1,
+					"source" : [ "obj-23", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
 					"destination" : [ "obj-63", 0 ],
+					"order" : 0,
 					"source" : [ "obj-23", 0 ]
 				}
 
@@ -1075,6 +1077,13 @@
 					"destination" : [ "obj-35", 0 ],
 					"order" : 2,
 					"source" : [ "obj-38", 0 ]
+				}
+
+			}
+, 			{
+				"patchline" : 				{
+					"destination" : [ "obj-22", 0 ],
+					"source" : [ "obj-39", 0 ]
 				}
 
 			}
@@ -1323,20 +1332,6 @@
 
 			}
  ],
-		"parameters" : 		{
-			"obj-22" : [ "dial", "dial", 0 ],
-			"parameterbanks" : 			{
-				"0" : 				{
-					"index" : 0,
-					"name" : "",
-					"parameters" : [ "-", "-", "-", "-", "-", "-", "-", "-" ]
-				}
-
-			}
-,
-			"inherited_shortname" : 1
-		}
-,
 		"dependency_cache" : [ 			{
 				"name" : "nn~.mxo",
 				"type" : "iLaX"
