@@ -452,7 +452,7 @@
 					"maxclass" : "comment",
 					"numinlets" : 1,
 					"numoutlets" : 0,
-					"patching_rect" : [ 1395.0, 253.0, 102.0, 47.0 ],
+					"patching_rect" : [ 1391.0, 242.0, 102.0, 47.0 ],
 					"presentation" : 1,
 					"presentation_rect" : [ 687.75, 126.200001895427704, 151.5, 20.0 ],
 					"text" : "custom novelification ratio"
