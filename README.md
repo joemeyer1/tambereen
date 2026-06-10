@@ -23,31 +23,40 @@ To set up (on a Mac):
     - Click "Download Zip"
     - After repository has downloaded, go to your "Downloads" folder and double-click the zip file
 
-2. Download python (version 3.8.17): https://www.python.org/downloads/release/python-3810/
+2. Optional, but recommended -- To use a default "musicnet" or "percussion" RAVE model with Max integration, download the corresponding standalone Tambereen interface app from my Drive folder: https://drive.google.com/drive/folders/1IZOI1tm24UPqegra14_TkFS1Drl81CEU?usp=sharing , drag it to the `interfaces` folder of this repo, then unzip it by double-clicking on it.
 
-3. Optional, but recommended -- Download the free trial version of Max MSP (it allows you to use the Max interface): https://cycling74.com/downloads 
+    Advanced users: To use Tambereen Max interface for custom RAVE models...
+    
+    1. Download Max MSP (it has a free trial version which allows you to use and modify the .maxpat interfaces): https://cycling74.com/downloads 
+    2. Download nn_tilde (source: https://github.com/acids-ircam/nn_tilde , troubleshooting: https://github.com/acids-ircam/nn_tilde/issues/92#issuecomment-3438803980 )
+    3. Add your custom RAVE model to this repo's `interfaces` folder
+    4. Open `interfaces/tambereen_interface_musicnet.maxpat` in Max MSP for use as a template patch. Replace the text "musicnet" in the "nn~ musicnet decode" box with your custom RAVE filename (excluding filename extension), and replace the text "16" in the "mc.unpack~ 16"" box with the number of latent dimensions your custom RAVE model uses.
 
-    [If you don't want to download Max, set the "AudioMovementProjectorSettings.PYTHON_PLAY_AUDIO" variable in run_settings.py to "True", and "AudioMovementProjectorSettings.AUDIO_FRAMES_PER_CHUNK" in "run_settings.py" to 10, and the program will use python to play the audio instead of using Max. But Warning: If you use python instead of Max to play the audio, the live audio you hear during interaction -- though not the audio recorded to file -- will be choppy and delayed, and you won't be able to use the novelification interface which is implemented in Max.]
+    [If you don't want to use Max, set the `AudioMovementProjectorSettings.PYTHON_PLAY_AUDIO` variable in run_settings.py to `True`, and `AudioMovementProjectorSettings.AUDIO_FRAMES_PER_CHUNK` in `run_settings.py` to `10`, and the program will use python to play the audio instead of using Max. But Warning: If you use python instead of Max to play the audio, the live audio you hear during interaction -- though not the audio recorded to file -- will be choppy and delayed, and you won't be able to use the novelification interface which is implemented in Max.]
 
-4. Open "Terminal" application (it is in your "Applications" folder in "Finder")
+3. Open "Terminal" application (it is in your "Applications" folder in "Finder")
 
-5. Navigate to the downloaded GitHub folder in Terminal
+4. Navigate to the downloaded GitHub folder in Terminal
 
     If you aren't familiar with Git or Python, do the following:
     
     - Type ```cd Downloads/tambereen-main``` into Terminal window, then press "Enter" key
     
-6. Copy the following block of commands into Terminal window, then press "Enter" key:
+5. Copy the following block of commands into Terminal window, then press "Enter" key:
 
     ```
-    virtualenv env --python=python3.8
+    command -v brew &>/dev/null || /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+    brew install python@3.9
+
+    python3.9 -m venv env
    
     source env/bin/activate
    
     python install_requirements.py
     ```
 
-7. Now the software is installed. To run it:
+6. Now the software is installed. To run it:
     - Type ```python main.py``` into Terminal window, then press "Enter" key. 
 
 
@@ -116,3 +125,7 @@ File structure:
     tests
         Unit tests
 
+
+Acknowledgments:
+
+Thank you to Shuoyang Jasper Zheng for helping with early stages of Max integration (including providing the initial RAVE decoder Max patch), and to Ashley Noel-Hirst for helping to convert Max patches into standalone app interfaces.
