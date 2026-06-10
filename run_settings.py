@@ -15,7 +15,13 @@ RAVE_MODEL: str  = 'percussion'  # This should be the same for audio-movement pr
 # use RaveLoader.load_model_from_file_path(model_file_path=RAVE_MODEL) if you want to load from RAVE_MODEL file path instead of using an official IRCAM model
 # (but if the  RAVE_MODEL is not an official IRCAM model then the standard function will load it from local path anyway)
 
-MAX_INTERFACE_PATH: str = 'interfaces/tambereen_interface_percussion.maxpat'
+_RAVE_MODEL_INTERFACES = {
+    'percussion': 'interfaces/tambereen_interface_percussion.maxpat',
+    'musicnet': 'interfaces/tambereen_interface_musicnet.maxpat',
+    'VCTK': 'interfaces/tambereen_interface_vctk.maxpat',
+}
+
+MAX_INTERFACE_PATH: str = _RAVE_MODEL_INTERFACES[RAVE_MODEL]
 
 
 @dataclass
