@@ -11,6 +11,8 @@ rave_output/*
 audio_training_data/*
 metrics_out/*
 
+*.app
+
 *.mp4
 *.png
 *.pdf
