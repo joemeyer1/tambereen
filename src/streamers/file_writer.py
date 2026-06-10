@@ -66,11 +66,14 @@ class FileWriter(StreamerBase):
             os.system(f"cp interfaces/out.wav {audio_output_filename.replace('.', '_mixed.')}")
             os.system(f"mv interfaces/out.wav interfaces/out0.wav")
         
-        pd.DataFrame(torch.concatenate([time_chunk.audio_chunk.embedding_frames for time_chunk in time_chunks])).to_csv(make_name_unique(f"{model_dir}/audio_output/audio_embeddings.csv"))
+        if self.run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
+            pd.DataFrame(torch.concatenate([time_chunk.audio_chunk.embedding_frames for time_chunk in time_chunks])).to_csv(make_name_unique(f"{model_dir}/audio_output/audio_embeddings.csv"))
+
         audio_movement_projector = ModelFileManager.load_model_back_compat(f"{model_dir}/model")
         if audio_movement_projector.novelifier is not None:
             novelified_embeddings = audio_movement_projector.novelifier.forward(torch.concatenate([time_chunk.audio_chunk.embedding_frames for time_chunk in time_chunks]))
-            pd.DataFrame(novelified_embeddings).to_csv(make_name_unique(f"{model_dir}/audio_output/novelified_audio_embeddings.csv"))
+            if self.run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
+                pd.DataFrame(novelified_embeddings).to_csv(make_name_unique(f"{model_dir}/audio_output/novelified_audio_embeddings.csv"))
             novelified_audio = torch.concatenate([audio_movement_projector.decode_audio_embs(novelified_embedding.expand(1, 1, -1).transpose(1, 2)) for novelified_embedding in novelified_embeddings]).flatten()
             novelified_audio_output_filename = audio_output_filename.replace('.', '_novelified.')
             sf.write(make_name_unique(novelified_audio_output_filename), novelified_audio, audio_sample_rate)
