@@ -121,4 +121,4 @@ File structure:
 
 Acknowledgments:
 
-    - Thank you to Shuoyang Jasper Zheng for helping with early stages of Max integration (including providing the initial RAVE decoder Max patch), and to Ashley Noel-Hirst for helping to convert Max patches into standalone app interfaces.
+Thank you to Shuoyang Jasper Zheng for helping with early stages of Max integration (including providing the initial RAVE decoder Max patch), and to Ashley Noel-Hirst for helping to convert Max patches into standalone app interfaces.
