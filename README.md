@@ -23,7 +23,7 @@ To set up (on a Mac):
     - Click "Download Zip"
     - After repository has downloaded, go to your "Downloads" folder and double-click the zip file
 
-2. Optional, but recommended -- To use a default "musicnet" or "percussion" RAVE model with Max integration, download the corresponding standalone Tambereen interface app from my Drive folder: https://drive.google.com/drive/folders/1IZOI1tm24UPqegra14_TkFS1Drl81CEU?usp=sharing , drag it to the `interfaces` folder of this repo, then unzip it by double-clicking on it.
+2. Optional, but recommended -- To use a default "musicnet", "percussion", or "VCTK" RAVE model with Max integration, download the corresponding standalone Tambereen interface app from my Drive folder: https://drive.google.com/drive/folders/1IZOI1tm24UPqegra14_TkFS1Drl81CEU?usp=sharing , drag it to the `interfaces` folder of this repo, then unzip it by double-clicking on it.
 
     Advanced users: To use Tambereen Max interface for custom RAVE models...
     
