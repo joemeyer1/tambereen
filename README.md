@@ -40,7 +40,7 @@ To set up (on a Mac):
 
     If you aren't familiar with Git or Python, do the following:
     
-    - Type ```cd Downloads/tambereen-main``` into Terminal window, then press "Enter" key
+    - Type ```cd ~/Downloads/tambereen-main``` into Terminal window, then press "Enter" key
     
 5. Copy the following block of commands into Terminal window, then press "Enter" key:
 
@@ -65,9 +65,7 @@ To set up (on a Mac):
     - Once the software is installed, you can run it any time by opening "Terminal" application, copying and pasting the following code block into the Terminal window, then pressing "Enter" key:
 
         ```
-        cd
-        
-        cd Downloads/tambereen-main
+        cd ~/Downloads/tambereen-main
     
         source env/bin/activate
     
