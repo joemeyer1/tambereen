@@ -8,6 +8,8 @@ import numpy as np
 import torch
 from torch import nn
 
+from run_settings import LoggingSettings
+
 from src.time_chunks.KeypointsChunk import KeypointsChunk
 from src.time_chunks.AudioChunk import AudioChunk
 
@@ -95,7 +97,8 @@ class AudioMovementProjector(MovementProjector, KeypointsProjector, AudioProject
             self.osc.send_message(self.address, audio_embedding_str)
             if self.novelifier is None:
                 self.osc.send_message(f"{self.address}_novel", audio_embedding_str)
-            print(audio_embedding_str)
+            if LoggingSettings.ENABLE_DEBUG_LOGGING:
+                print(audio_embedding_str)
         else:
             audio_embeddings = torch.squeeze(audio_embeddings, dim=1)
 

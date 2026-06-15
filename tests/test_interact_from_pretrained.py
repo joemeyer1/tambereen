@@ -10,7 +10,7 @@ def test_interact_from_pretrained(model_dir_path: str):
     AudioMovementStreamer().stream_movement_to_audio(
         model_dir=model_dir_path,
         python_play_audio=AudioMovementProjectorSettings.PYTHON_PLAY_AUDIO,
-        audio_frames_per_chunk=AudioMovementProjectorSettings.AUDIO_FRAMES_PER_CHUNK,
+        chunk_buffer_size=AudioMovementProjectorSettings.CHUNK_BUFFER_SIZE,
         tambereen_interface_path=RunSettings.MAX_INTERFACE_PATH,
     )
 
