@@ -36,7 +36,8 @@ class MovementStreamer(StreamerBase):
 
         while cap.isOpened():
             try:
-                chunk_time_start = time.time_ns()
+                if self.run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
+                    chunk_time_start = time.time_ns()
                 chunk_movement_frames_raw = []
                 keypoints_frames_raw = []
                 for frame_i in range(1, movement_frames_per_chunk + 1):
@@ -66,8 +67,10 @@ class MovementStreamer(StreamerBase):
                 )
 
                 queue.put(time_chunk)
-                chunk_time_end = time.time_ns()
-                print(f"mv->: {(chunk_time_end - chunk_time_start) / 1e6} ms")
+
+                if self.run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
+                    chunk_time_end = time.time_ns()
+                    print(f"mv->: {(chunk_time_end - chunk_time_start) / 1e6} ms")
             except KeyboardInterrupt:
                 break
 
