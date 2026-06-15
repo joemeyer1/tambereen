@@ -60,7 +60,7 @@ def run_tambereen(run_settings=RunSettings()):
     AudioMovementStreamer(run_settings=run_settings).stream_movement_to_audio(
         model_dir=model_path,
         python_play_audio=run_settings.audio_movement_projector_settings.PYTHON_PLAY_AUDIO,
-        audio_frames_per_chunk=run_settings.audio_movement_projector_settings.AUDIO_FRAMES_PER_CHUNK,
+        audio_frames_per_chunk=run_settings.audio_movement_projector_settings.CHUNK_BUFFER_SIZE,
         tambereen_interface_path=run_settings.MAX_INTERFACE_PATH,
     )
 
