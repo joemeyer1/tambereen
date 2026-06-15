@@ -15,7 +15,7 @@ class AudioMovementStreamer(MovementStreamer, AudioStreamer, AudioPlayer):
             self,
             model_dir: str,
             python_play_audio: bool = False,
-            audio_frames_per_chunk: int = 1,
+            chunk_buffer_size: int = 1,
             tambereen_interface_path: str = 'interfaces/tambereen_interface_percussion.maxpat'
     ):
         
@@ -37,9 +37,9 @@ class AudioMovementStreamer(MovementStreamer, AudioStreamer, AudioPlayer):
             os.mkdir(output_audio_dir)
         output_audio_filename = make_name_unique(f"{output_audio_dir}/interact_movement_to_audio.wav")
 
-        movement_frames_per_chunk = audio_frames_per_chunk
+        movement_frames_per_chunk = chunk_buffer_size
         print(f"movement_frames_per_chunk: {movement_frames_per_chunk}")
-        print(f"audio_frames_per_chunk: {audio_frames_per_chunk}")
+        print(f"chunk_buffer_size: {chunk_buffer_size}")
 
         movement_queue = Queue()
         audio_queue = Queue()

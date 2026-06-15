@@ -54,7 +54,10 @@ class AudioMovementProjectorSettings:
     # If you try using a different pose estimator than the model was trained with, the pose keypoints passed won't align with those the model was trained with and you will get a tensor size mismatch error between actual input and model input dimensions
 
     PYTHON_PLAY_AUDIO: bool = False
-    AUDIO_FRAMES_PER_CHUNK: int = 1
+    CHUNK_BUFFER_SIZE: int = 1  # number of embedding frames to store in each time chunk
+    # Higher CHUNK_BUFFER_SIZE -> more latency
+    # For streaming audio in Max, there's no reason to set CHUNK_BUFFER_SIZE > 1
+    # But for streaming audio in Python, each audio play() call is expensive, so better to bundle multiple audio embedding frames into each time chunk passed to play() (e.g. CHUNK_BUFFER_SIZE=10)
 
     pose_estimator_settings: PoseEstimatorSettings = PoseEstimatorSettings()
 

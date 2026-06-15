@@ -32,7 +32,8 @@ class AudioStreamer(StreamerBase):
         time_chunks = []
         while True:
             try:
-                start_time = time.time_ns()
+                if self.run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
+                    start_time = time.time_ns()
                 time_chunk: TimeChunk = keypoints_queue.get()
 
                 if time_chunk.keypoints_chunk is None:
@@ -45,8 +46,9 @@ class AudioStreamer(StreamerBase):
                 if python_play_audio:
                     audio_queue.put(time_chunk)
                     
-                end_time = time.time_ns()
-                print(f"->au: {(end_time - start_time) / 1e6} ms")
+                if self.run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
+                    end_time = time.time_ns()
+                    print(f"->au: {(end_time - start_time) / 1e6} ms")
 
 
             except KeyboardInterrupt:
