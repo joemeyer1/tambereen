@@ -30,6 +30,6 @@ def test_train_audio_movement_projector(
         AudioMovementStreamer().stream_movement_to_audio(
         model_dir=output_dir_path,
         python_play_audio=AudioMovementProjectorSettings.PYTHON_PLAY_AUDIO,
-        audio_frames_per_chunk=AudioMovementProjectorSettings.CHUNK_BUFFER_SIZE,
+        chunk_buffer_size=AudioMovementProjectorSettings.CHUNK_BUFFER_SIZE,
         tambereen_interface_path=RunSettings.MAX_INTERFACE_PATH,
     )

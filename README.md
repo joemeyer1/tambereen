@@ -32,7 +32,7 @@ To set up (on a Mac):
     3. Add your custom RAVE model to this repo's "interfaces" folder
     4. Open "interfaces/tambereen_interface_musicnet.maxpat" in Max MSP for use as a template patch. Replace the text "musicnet" in the "nn~ musicnet decode" box with your custom RAVE filename (excluding filename extension), and replace the text "16" in the "mc.unpack~ 16" box with the number of latent dimensions your custom RAVE model uses.
 
-    [If you don't want to use Max, set the `AudioMovementProjectorSettings.PYTHON_PLAY_AUDIO` variable in "run_settings.py" to `True`, and `AudioMovementProjectorSettings.AUDIO_FRAMES_PER_CHUNK` in "run_settings.py" to `10`, and the program will use python to play the audio instead of using Max. But Warning: If you use python instead of Max to play the audio, the live audio you hear during interaction -- though not the audio recorded to file -- will be choppy and delayed, and you won't be able to use the novelification interface which is implemented in Max.]
+    [If you don't want to use Max, set the `AudioMovementProjectorSettings.PYTHON_PLAY_AUDIO` variable in "run_settings.py" to `True`, and `AudioMovementProjectorSettings.CHUNK_BUFFER_SIZE` in "run_settings.py" to `10`, and the program will use python to play the audio instead of using Max. But Warning: If you use python instead of Max to play the audio, the live audio you hear during interaction -- though not the audio recorded to file -- will be choppy and delayed, and you won't be able to use the novelification interface which is implemented in Max.]
 
 3. Open "Terminal" application (it is in your "Applications" folder in "Finder")
 
