@@ -6,11 +6,16 @@ Tambereen is a movement sonification system (i.e. a digital musical instrument) 
 
 1. An autoencoder-based unsupervised learning algorithm for mapping movements to sounds, enabling you to synthesize audio from your movements
 
-2. Latent Novelification (LN), a network bending method for interactively transforming movement-to-sound mappings, enabling you to "tune" the sound space you're interacting with
+    _["Interactive Movement-to-Audio with Pre-Trained Neural Networks" (Meyer et al. 2025)](https://dl.acm.org/doi/10.1145/3698061.3734415)_
+
+2. Latent Novelification (LN), a network bending method for interactively transforming movement-to-sound mappings, enabling you to "tune" the sound space you're interacting with 
+
+    _["Latent Novelification: Expanding Generative Expressivity Through Objective-Defined Transformation" (Meyer et al. 2026)](https://dl.acm.org/doi/10.1145/3803784.3816873)_
 
 
 Tambereen requires no specialized hardware, using computer vision to extract real-time pose data from video feed of your movements (captured by default via your laptop's built-in camera), and lightweight ML algorithms to map your movements to sound (meaning you don't need a powerful computer to run it). Its unsupervised approach enables it to learn mappings that "just work", from your custom movements to a set of sounds you may curate, without you needing to demonstrate many individual paired movement-sound examples or risk a randomized mapping that may not yield a coherent interaction space. Its LN component enables you to interactively change the sounds your movements map to, and explore new regions of timbre.
 
+_[A video demonstration of Tambereen's features can be found on Youtube (by clicking this link).](https://youtu.be/cr9FXQgDNzw)_
 
 To set up (on a Mac):
 
