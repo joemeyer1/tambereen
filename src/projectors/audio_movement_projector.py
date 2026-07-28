@@ -26,8 +26,9 @@ torch.set_grad_enabled(False)
 
 
 class AudioMovementProjector(MovementProjector, KeypointsProjector, AudioProjector, nn.Module):
-    audio_projector: Optional[Any]  # todo - I think this is actually a pytorch recursive script model?
-    movement_projector: Optional[Any]  # todo - I think this is maybe a tf Interpreter?
+    audio_projector: Optional[Any]  # must have "decode()" and "encode()" audio functions (e.g. a pytorch RAVE model)
+    movement_projector: Optional[nn.Module]  # a "MovementProjector" class which loads and wraps a pose estimator class (see "projectors.pose_estimaros") projecting image frames to body keypoints coordinates
+    # Note: If you want to modify Tambereen to map other input streams to sound instead of using pose estimators on image data, "MovementProjector" and "streamers.movement_streamer.MovementStreamer" are the classes whose functions you should modify
     keypoints_projector: Optional[nn.Module]
     multimodal_projector: Optional[nn.Module]
 
