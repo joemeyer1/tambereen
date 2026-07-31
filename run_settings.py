@@ -25,7 +25,7 @@ _RAVE_MODEL_INTERFACES_STANDALONE_APP = {  # These will need to be downloaded fr
     'musicnet': 'interfaces/tambereen_interface_musicnet.app',
     'VCTK': 'interfaces/tambereen_interface_vctk.app',
 }
-MAX_INTERFACE_PATH: str = _RAVE_MODEL_INTERFACES_STANDALONE_APP[RAVE_MODEL]
+MAX_INTERFACE_PATH: str = _RAVE_MODEL_INTERFACES_MAXPAT[RAVE_MODEL]
 
 
 @dataclass
