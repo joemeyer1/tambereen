@@ -13,7 +13,7 @@ from src.projectors.pose_estimators.pose_estimator_mediapipe import PoseEstimato
 RAVE_MODEL: str  = 'percussion'  # This should be the same for audio-movement projector and audio novelifier
 # see src.model_managers.rave_loader
 # use RaveLoader.load_model_from_file_path(model_file_path=RAVE_MODEL) if you want to load from RAVE_MODEL file path instead of using an official IRCAM model
-# (but if the  RAVE_MODEL is not an official IRCAM model then the standard function will load it from local path anyway)
+# (but if the  RAVE_MODEL is not an official IRCAM model (i.e. from https://acids-ircam.github.io/rave_models_download) then the standard function will load it from local path anyway)
 
 _RAVE_MODEL_INTERFACES_MAXPAT = {  # These are included in this repo but you need to install nn_tilde to use (see README.md setup instructions step 2)
     'percussion': 'interfaces/tambereen_interface_percussion.maxpat',
@@ -73,9 +73,9 @@ class AudioMovementProjectorSettings:
 
 @dataclass
 class AudioNovelifierSettings:
-    PRETRAINED_MODEL_PATH: Optional[str] = None
+    PRETRAINED_MODEL_PATH: Optional[str] = None  # If this path is specified, the model located there will be loaded instead of training a new novelifier
     
-    AUDIO_TRAINING_DATA_PATH: str = 'audio_training_data/percussion'
+    AUDIO_TRAINING_DATA_PATH: str = None  # If 'AUDIO_TRAINING_DATA_PATH=None', novelifier will be trained on movement training data (i.e. keypoints from video) projected to audio embeddings instead of on embeddings of audio files
     USE_CACHE: bool = False  # For training data
     MAX_AUDIO_SECS: Optional[float] = 30
 

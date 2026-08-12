@@ -16,9 +16,18 @@ def run_all_tests():
     test_autoencode_audio(audio_file_path='audio_training_data/percussion/banana-shaker__long_forte_shaken.wav')
     test_keypoints_extractor(keypoints_dataset_filename="keypoints_data_test.csv", max_frames=100)
     test_keypoints_encoder(epochs=4, max_frames=25)
-    test_train_audio_movement_projector(run_settings=RunSettings(audio_movement_projector_settings=AudioMovementProjectorSettings(EPOCHS=4, MAX_AUDIO_SECS=3)))
-    test_audio_novelifier(run_settings=RunSettings(audio_novelifier_settings=AudioNovelifierSettings(EPOCHS=4, MAX_AUDIO_SECS=3)))
-    test_finetuning(run_settings=RunSettings(audio_movement_projector_settings=AudioMovementProjectorSettings(EPOCHS=4, MAX_AUDIO_SECS=3)))
+    test_train_audio_movement_projector(run_settings=RunSettings(
+        RAVE_MODEL='percussion',
+        audio_movement_projector_settings=AudioMovementProjectorSettings(AUDIO_TRAINING_DATA_PATH='audio_training_data/percussion', EPOCHS=4, MAX_AUDIO_SECS=3),
+    ))
+    test_audio_novelifier(run_settings=RunSettings(
+        RAVE_MODEL='percussion',
+        audio_novelifier_settings=AudioNovelifierSettings(PRETRAINED_MODEL_PATH=None, AUDIO_TRAINING_DATA_PATH='audio_training_data/percussion', EPOCHS=4, MAX_AUDIO_SECS=3),
+    ))
+    test_finetuning(run_settings=RunSettings(
+        RAVE_MODEL='percussion',
+        audio_movement_projector_settings=AudioMovementProjectorSettings(AUDIO_TRAINING_DATA_PATH='audio_training_data/percussion', EPOCHS=4, MAX_AUDIO_SECS=3),
+    ))
 
 
 if __name__ == '__main__':
