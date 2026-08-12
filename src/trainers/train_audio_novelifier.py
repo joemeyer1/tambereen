@@ -14,8 +14,10 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 
 from src.model_managers.rave_loader import RaveLoader
+from src.model_managers.model_file_manager import ModelFileManager
 from src.projectors.audio_movement_projector import AudioMovementProjector
 from src.projectors.novelifier import Novelifier
+from src.streamers.movement_streamer import MovementStreamer
 from src.trainers._embeddings_assessor import EmbeddingsAssessor
 from src.utils import get_audio_data, make_name_unique, CustomDataset
 
@@ -29,45 +31,57 @@ def train_audio_novelifier(
         output_dir_path: str,
 ) -> Novelifier:
 
-    # GET MAX AUDIO FRAMES / EMBEDDINGS
-    max_audio_secs = run_settings.audio_novelifier_settings.MAX_AUDIO_SECS
-    if max_audio_secs is not None and max_audio_secs > 0:
-        samples_per_sec = 44100
-        max_audio_frames = int(max_audio_secs * samples_per_sec)
-
-        samples_per_embedding = 2048
-        embeddings_per_sec = samples_per_sec / samples_per_embedding
-        max_audio_embeddings = int(max_audio_secs * embeddings_per_sec)
-    else:
-        max_audio_frames = None
-        max_audio_embeddings = None
-
-    # rave_model_name, audio_dir_paths = 'percussion', 'audio_training_data/percussion'
-    # rave_model_name, audio_dir_paths = 'musicnet', 'audio_training_data/violin'
-    rave_model_name, audio_dir_paths = run_settings.RAVE_MODEL,  run_settings.audio_novelifier_settings.AUDIO_TRAINING_DATA_PATH
-
     pretrained_rave_model = RaveLoader().download_official_model_by_name(model_name=run_settings.RAVE_MODEL)
-
-    # MAKE DATASET
-    audio_embeddings_cache_path = f"{'/'.join(audio_dir_paths.split('/')[:-1])}/_cached_embeddings/" \
-                                  f"{audio_dir_paths.split('/')[-1]}.pt"
-    if run_settings.audio_novelifier_settings.USE_CACHE and os.path.exists(audio_embeddings_cache_path):
-        print(f"Loading cached audio embeddings...")
-        audio_embeddings = torch.load(audio_embeddings_cache_path)
-        if max_audio_embeddings is not None:
-            audio_embeddings = audio_embeddings[:max_audio_embeddings]
+    max_audio_frames, max_audio_embeddings = NovelifierTrainer._get_max_audio_frames_and_embeddings(max_audio_secs=run_settings.audio_novelifier_settings.MAX_AUDIO_SECS)
+    if run_settings.audio_novelifier_settings.AUDIO_TRAINING_DATA_PATH is None:
+        recent_output_data_run = max((x for x in os.listdir('output_data_runs') if x.isdigit()), key=lambda x: os.path.getmtime(f'output_data_runs/{x}'))
+        recent_movement_data_path = f"output_data_runs/{recent_output_data_run}/movement_training_data.mp4"
+        assert os.path.exists(recent_movement_data_path) and os.path.exists(f"output_data_runs/{recent_output_data_run}/model/shared_latent_space_projector.pt"), "Please specify 'run_settings.audio_novelifier_settings.AUDIO_TRAINING_DATA_PATH'"  # make sure model and training data both exist - if they don't, ask user to specify audio training data path to use instead
+        print(f"Training audio novelifier on audio embeddings mapped from recent movement video {recent_movement_data_path}")
+        audio_movement_projector = ModelFileManager.load_model(f"output_data_runs/{recent_output_data_run}/model")
+        keypoints_data_for_training = MovementStreamer().record_keypoints(
+            input_filename=recent_movement_data_path,
+            max_frames=None,
+            show=False,
+        )
+        multimodal_movement_embeddings = audio_movement_projector.proj_keypoints_into_multimodal_space(keypoints_data_for_training)
+        audio_embeddings = audio_movement_projector.multimodal_projector.decode(multimodal_movement_embeddings)
     else:
-        audio_data, audio_sample_rate = get_audio_data(audio_dir_paths=audio_dir_paths, max_audio_frames=max_audio_frames)
+        # GET MAX AUDIO FRAMES / EMBEDDINGS
+        max_audio_secs = run_settings.audio_novelifier_settings.MAX_AUDIO_SECS
+        if max_audio_secs is not None and max_audio_secs > 0:
+            samples_per_sec = 44100
+            max_audio_frames = int(max_audio_secs * samples_per_sec)
 
-        if len(audio_data.shape) > 1:  # convert to mono
-            audio_data = audio_data.mean(1)
+            samples_per_embedding = 2048
+            embeddings_per_sec = samples_per_sec / samples_per_embedding
+            max_audio_embeddings = int(max_audio_secs * embeddings_per_sec)
+        else:
+            max_audio_frames = None
+            max_audio_embeddings = None
 
-        # encode audio
-        audio_embeddings = AudioMovementProjector(audio_projector=pretrained_rave_model).embed_audio(audio_data)
-        print(f"Caching audio embeddings...")
-        if not os.path.exists(f"{'/'.join(audio_embeddings_cache_path.split('/')[:-1])}"):
-            os.mkdir(f"{'/'.join(audio_embeddings_cache_path.split('/')[:-1])}")
-        torch.save(audio_embeddings, audio_embeddings_cache_path)
+        audio_dir_paths = run_settings.audio_novelifier_settings.AUDIO_TRAINING_DATA_PATH
+
+        # MAKE DATASET
+        audio_embeddings_cache_path = f"{'/'.join(audio_dir_paths.split('/')[:-1])}/_cached_embeddings/" \
+                                    f"{audio_dir_paths.split('/')[-1]}.pt"
+        if run_settings.audio_novelifier_settings.USE_CACHE and os.path.exists(audio_embeddings_cache_path):
+            print(f"Loading cached audio embeddings...")
+            audio_embeddings = torch.load(audio_embeddings_cache_path)
+            if max_audio_embeddings is not None:
+                audio_embeddings = audio_embeddings[:max_audio_embeddings]
+        else:
+            audio_data, audio_sample_rate = get_audio_data(audio_dir_paths=audio_dir_paths, max_audio_frames=max_audio_frames)
+
+            if len(audio_data.shape) > 1:  # convert to mono
+                audio_data = audio_data.mean(1)
+
+            # encode audio
+            audio_embeddings = AudioMovementProjector(audio_projector=pretrained_rave_model).embed_audio(audio_data)
+            print(f"Caching audio embeddings...")
+            if not os.path.exists(f"{'/'.join(audio_embeddings_cache_path.split('/')[:-1])}"):
+                os.mkdir(f"{'/'.join(audio_embeddings_cache_path.split('/')[:-1])}")
+            torch.save(audio_embeddings, audio_embeddings_cache_path)
 
     audio_embeddings = audio_embeddings[torch.randperm(audio_embeddings.shape[0])]  # shuffle audio embeddings
     rand_perm_audio_embeddings = audio_embeddings[torch.randperm(audio_embeddings.shape[0])]  # new shuffle for reference
@@ -274,3 +288,18 @@ class NovelifierTrainer(EmbeddingsAssessor):
             embeddings_ref_transformed=embeddings_ref_transformed,
         )
         return reward
+
+    @staticmethod
+    def _get_max_audio_frames_and_embeddings(max_audio_secs: Optional[int]) -> Tuple[Optional[int], Optional[int]]:
+        """Helper for train_audio_novelifier(). Returns (max number of sample frames (i.e. standardized to 44100 per second sample rate), max number of audio embeddings (i.e. 2048 RAVE embeddings per second of audio)."""
+        if max_audio_secs is not None and max_audio_secs > 0:
+            samples_per_sec = 44100
+            max_audio_frames = int(max_audio_secs * samples_per_sec)
+
+            samples_per_embedding = 2048
+            embeddings_per_sec = samples_per_sec / samples_per_embedding
+            max_audio_embeddings = int(max_audio_secs * embeddings_per_sec)
+        else:
+            max_audio_frames = None
+            max_audio_embeddings = None
+        return max_audio_frames, max_audio_embeddings
