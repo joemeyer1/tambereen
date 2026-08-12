@@ -22,7 +22,7 @@ from run_settings import RunSettings, AudioNovelifierSettings
 def run_audio_novelifier(
         run_settings: RunSettings = RunSettings(
             RAVE_MODEL='percussion',
-            audio_novelifier_settings=AudioNovelifierSettings(PRETRAINED_MODEL_PATH=None, AUDIO_TRAINING_DATA_PATH='audio_training_data/percussion', EPOCHS=10),
+            audio_novelifier_settings=AudioNovelifierSettings(PRETRAINED_MODEL_PATH=None, AUDIO_TRAINING_DATA_PATH='audio_training_data/percussion', EPOCHS=200),
         ),
         test_audio_data_path: str = 'audio_training_data/percussion',
 ):
@@ -30,7 +30,7 @@ def run_audio_novelifier(
     pretrained_rave_model = RaveLoader().download_official_model_by_name(model_name=run_settings.RAVE_MODEL)
 
     # GET AUDIO_NOVELIFIER
-    pretrained_novelifier_path = run_settings.audio_novelifier_settings.AudioNovelifierSettings.PRETRAINED_MODEL_PATH
+    pretrained_novelifier_path = run_settings.audio_novelifier_settings.PRETRAINED_MODEL_PATH
     if pretrained_novelifier_path is not None and os.path.exists(pretrained_novelifier_path):
         pretrained_audio_novelifier_path = f"{pretrained_novelifier_path}/model/audio_novelifier.pt"
         assert os.path.exists(pretrained_audio_novelifier_path)
