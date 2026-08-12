@@ -32,9 +32,6 @@ def test_audio_novelifier(
     assert 0 <= novel_wet_ratio_embeddings <= 1
     assert 0 <= novel_wet_ratio_audio <= 1
 
-    # rave_model_name, audio_dir_paths = 'musicnet', 'audio_training_data/bach'
-    # rave_model_name, audio_dir_paths = 'percussion', 'audio_training_data/percussion'
-
     pretrained_rave_model = RaveLoader().download_official_model_by_name(model_name=run_settings.RAVE_MODEL)
 
     # GET AUDIO_NOVELIFIER
