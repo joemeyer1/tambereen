@@ -75,7 +75,7 @@ class AudioMovementProjectorSettings:
 class AudioNovelifierSettings:
     PRETRAINED_MODEL_PATH: Optional[str] = None  # If this path is specified, the model located there will be loaded instead of training a new novelifier
     
-    AUDIO_TRAINING_DATA_PATH: str = 'audio_training_data/percussion'  # If 'AUDIO_TRAINING_DATA_PATH=None', novelifier will be trained on movement training data (i.e. keypoints from video) projected to audio embeddings instead of on embeddings of audio files
+    AUDIO_TRAINING_DATA_PATH: str = None  # If 'AUDIO_TRAINING_DATA_PATH=None', novelifier will be trained on movement training data (i.e. keypoints from video) projected to audio embeddings instead of on embeddings of audio files
     USE_CACHE: bool = False  # For training data
     MAX_AUDIO_SECS: Optional[float] = 30
 
