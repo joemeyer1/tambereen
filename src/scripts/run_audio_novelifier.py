@@ -53,6 +53,12 @@ def run_audio_novelifier(
         )
         torch.save(audio_novelifier, f'{output_dir_path}/model/audio_novelifier.pt')
 
+        if run_settings.logging_settings.ENABLE_MODEL_METADATA_LOGGING:
+            if not os.path.exists(f"{output_dir_path}/model_metadata"):
+                os.mkdir(f"{output_dir_path}/model_metadata")
+            with open(f"{output_dir_path}/model_metadata/run_settings.txt", 'w') as f:
+                f.write(f"RUN_SETTINGS: '{run_settings}'\n")
+
     print(f"Testing audio_novelifier ({output_dir_path.replace('output_data_runs/', '')})...")
     if not os.path.exists(f"{output_dir_path}/samples/"):
         os.mkdir(f"{output_dir_path}/samples/")
