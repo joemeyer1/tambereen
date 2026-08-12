@@ -97,7 +97,6 @@ def run_audio_novelifier(
     incrementally_novelified_audio = np.concatenate(incrementally_novelified_audio_list, axis=0)
     sf.write(make_name_unique(f"{novelified_samples_dir_path}/incrementally_novelified_audio.wav"), incrementally_novelified_audio, audio_sample_rate)
     print(f"Done.\n\n")
-    return
 
 
 if __name__ == '__main__':
