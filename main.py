@@ -3,10 +3,10 @@
 # Copyright (c) 2024-2026 Joseph Meyer. MIT License.
 
 
-from src.scripts.run_tambereen import run_tambereen  # train with standard epochs, standard data
+from scripts.run_tambereen import run_tambereen  # train with standard epochs, standard data
 # from tests.test_tambereen import test_tambereen  # train with few epochs, little data
 # from tests.test_interact_from_pretrained import test_interact_from_pretrained
-# from src.scripts.run_audio_novelifier import run_audio_novelifier
+# from scripts.run_audio_novelifier import run_audio_novelifier
 # from tests.run_all_tests import run_all_tests
 
 

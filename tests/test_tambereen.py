@@ -4,7 +4,7 @@
 
 from run_settings import RunSettings, AudioMovementProjectorSettings, AudioNovelifierSettings
 
-from src.scripts.run_tambereen import run_tambereen
+from scripts.run_tambereen import run_tambereen
 
 
 def test_tambereen():
