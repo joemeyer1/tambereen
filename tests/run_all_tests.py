@@ -22,7 +22,7 @@ def run_all_tests():
     ))
     test_audio_novelifier(run_settings=RunSettings(
         RAVE_MODEL='percussion',
-        audio_novelifier_settings=AudioNovelifierSettings(AUDIO_TRAINING_DATA_PATH='audio_training_data/percussion', EPOCHS=4, MAX_AUDIO_SECS=3),
+        audio_novelifier_settings=AudioNovelifierSettings(PRETRAINED_MODEL_PATH=None, AUDIO_TRAINING_DATA_PATH='audio_training_data/percussion', EPOCHS=4, MAX_AUDIO_SECS=3),
     ))
     test_finetuning(run_settings=RunSettings(
         RAVE_MODEL='percussion',

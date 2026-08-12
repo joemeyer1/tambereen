@@ -24,9 +24,8 @@ def test_audio_novelifier(
         novel_wet_ratio_audio: float = 1,
         run_settings: RunSettings = RunSettings(
             RAVE_MODEL='percussion',
-            audio_novelifier_settings=AudioNovelifierSettings(AUDIO_TRAINING_DATA_PATH='audio_training_data/percussion', EPOCHS=10),
+            audio_novelifier_settings=AudioNovelifierSettings(PRETRAINED_MODEL_PATH=None, AUDIO_TRAINING_DATA_PATH='audio_training_data/percussion', EPOCHS=10),
         ),
-        pretrained_model_path: Optional[str] = None,
 ):
 
     assert 0 <= novel_wet_ratio_embeddings <= 1
@@ -35,14 +34,15 @@ def test_audio_novelifier(
     pretrained_rave_model = RaveLoader().download_official_model_by_name(model_name=run_settings.RAVE_MODEL)
 
     # GET AUDIO_NOVELIFIER
-    if pretrained_model_path is not None and os.path.exists(pretrained_model_path):
-        pretrained_audio_novelifier_path = f"{pretrained_model_path}/model/audio_novelifier.pt"
+    pretrained_novelifier_path = run_settings.audio_novelifier_settings.AudioNovelifierSettings.PRETRAINED_MODEL_PATH
+    if pretrained_novelifier_path is not None and os.path.exists(pretrained_novelifier_path):
+        pretrained_audio_novelifier_path = f"{pretrained_novelifier_path}/model/audio_novelifier.pt"
         assert os.path.exists(pretrained_audio_novelifier_path)
         print(f"loading {pretrained_audio_novelifier_path}")
         audio_novelifier = torch.load(f"{pretrained_audio_novelifier_path}")
-        if not os.path.exists(f"{pretrained_model_path}/samples/"):
-            os.mkdir(f"{pretrained_model_path}/samples/")
-        output_dir_path = pretrained_model_path
+        if not os.path.exists(f"{pretrained_novelifier_path}/samples/"):
+            os.mkdir(f"{pretrained_novelifier_path}/samples/")
+        output_dir_path = pretrained_novelifier_path
     else:
         output_dir_path = make_name_unique('output_data_runs/')
         os.mkdir(output_dir_path)
