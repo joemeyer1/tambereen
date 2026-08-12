@@ -22,7 +22,7 @@ from run_settings import RunSettings, AudioNovelifierSettings
 def run_audio_novelifier(
         run_settings: RunSettings = RunSettings(
             RAVE_MODEL='percussion',
-            audio_novelifier_settings=AudioNovelifierSettings(PRETRAINED_MODEL_PATH=None, AUDIO_TRAINING_DATA_PATH='audio_training_data/percussion', EPOCHS=200),
+            audio_novelifier_settings=AudioNovelifierSettings(PRETRAINED_MODEL_PATH=None, AUDIO_TRAINING_DATA_PATH='audio_training_data/percussion', EPOCHS=10),
         ),
         test_audio_data_path: str = 'audio_training_data/percussion',
 ):
@@ -57,6 +57,7 @@ def run_audio_novelifier(
     if not os.path.exists(f"{output_dir_path}/samples/"):
         os.mkdir(f"{output_dir_path}/samples/")
     novelified_samples_dir_path = make_name_unique(f"{output_dir_path}/samples/")
+    os.mkdir(f"{novelified_samples_dir_path}/")
         
     # GET AUDIO DATA FOR TEST
     if run_settings.audio_novelifier_settings.MAX_AUDIO_SECS is not None and run_settings.audio_novelifier_settings.MAX_AUDIO_SECS > 0:
@@ -99,7 +100,7 @@ def run_audio_novelifier(
         sf.write(novelified_filename, mixed_audio, audio_sample_rate)
         incrementally_novelified_audio_list.append(mixed_audio)
     incrementally_novelified_audio = np.concatenate(incrementally_novelified_audio_list, axis=0)
-    sf.write(make_name_unique(f"incrementally_novelified_audio.wav"), incrementally_novelified_audio, audio_sample_rate)
+    sf.write(make_name_unique(f"{novelified_samples_dir_path}/incrementally_novelified_audio.wav"), incrementally_novelified_audio, audio_sample_rate)
     print(f"Done.\n\n")
 
 
