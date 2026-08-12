@@ -84,7 +84,9 @@ def run_audio_novelifier(
 
     # write incrementally novelified audio
     incrementally_novelified_audio_list = []
-    for novelification_ratio in (float(i / 20) for i in range(0, 21)):
+    novelification_increment = 10  # number of novelification increments from 0 to 1
+    assert novelification_increment > 0
+    for novelification_ratio in (float(i / novelification_increment) for i in range(0, novelification_increment + 1)):
         mixed_audio_embeddings = (novelification_ratio * novelified_audio_embeddings) + ((1 - novelification_ratio) * audio_embeddings)
         mixed_audio = pretrained_rave_model.decode(mixed_audio_embeddings).numpy().reshape(-1)
 
