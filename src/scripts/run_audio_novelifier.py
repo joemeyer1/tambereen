@@ -22,7 +22,7 @@ from run_settings import RunSettings, AudioNovelifierSettings
 def run_audio_novelifier(
         run_settings: RunSettings = RunSettings(
             RAVE_MODEL='percussion',
-            audio_novelifier_settings=AudioNovelifierSettings(PRETRAINED_MODEL_PATH=None, AUDIO_TRAINING_DATA_PATH='audio_training_data/percussion', EPOCHS=10),
+            audio_novelifier_settings=AudioNovelifierSettings(PRETRAINED_MODEL_PATH=None, AUDIO_TRAINING_DATA_PATH='audio_training_data/percussion', EPOCHS=200),
         ),
         test_audio_data_path: str = 'audio_training_data/percussion',
 ):
@@ -77,13 +77,6 @@ def run_audio_novelifier(
     if run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
         pd.DataFrame(audio_embeddings[0]).to_csv("audio_embeddings.csv")
 
-
-    # Decode test data
-    audio_output_file_path = f'{novelified_samples_dir_path}/autoencoded_audio.wav'
-    if not os.path.exists(audio_output_file_path):
-        autoencoded_audio = pretrained_rave_model.decode(audio_embeddings).numpy().reshape(-1)
-        sf.write(audio_output_file_path, autoencoded_audio, audio_sample_rate)
-
     # Novelify then decode embeddings
     pre_novelified_audio_embeddings = audio_embeddings.transpose(1, 2)
     novelified_audio_embeddings = audio_novelifier.forward(pre_novelified_audio_embeddings).transpose(1, 2)
@@ -102,6 +95,7 @@ def run_audio_novelifier(
     incrementally_novelified_audio = np.concatenate(incrementally_novelified_audio_list, axis=0)
     sf.write(make_name_unique(f"{novelified_samples_dir_path}/incrementally_novelified_audio.wav"), incrementally_novelified_audio, audio_sample_rate)
     print(f"Done.\n\n")
+    return
 
 
 if __name__ == '__main__':
