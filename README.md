@@ -28,16 +28,20 @@ To set up (on a Mac):
     - Click "Download Zip"
     - After repository has downloaded, go to your "Downloads" folder and double-click the zip file
 
-2. Optional, but recommended -- To use a default "musicnet", "percussion", or "VCTK" RAVE model with Max integration, download the corresponding standalone Tambereen interface app from my Drive folder: https://drive.google.com/drive/folders/1IZOI1tm24UPqegra14_TkFS1Drl81CEU?usp=sharing , drag it to the "interfaces" folder of this repo, then unzip it by double-clicking on it. _[Note: For now, unless you have an Intel-chip Mac, please follow the "Advanced users" instructions below to explicitly install Max MSP and nn_tilde. The standalone apps, which bypass the need to explicitly install Max MSP and nn_tilde, may currently be configured to only support Intel-chip Macs. We will add M-chip Mac interfaces soon.]_
+2. Install Max and nn_tilde (Optional, but recommended) -- 
 
-    Advanced users: To use Tambereen Max interface for custom RAVE models...
-    
     1. Download Max MSP (it has a free trial version which allows you to use and modify the .maxpat interfaces): https://cycling74.com/downloads 
     2. Download nn_tilde (source: https://github.com/acids-ircam/nn_tilde , troubleshooting: https://github.com/acids-ircam/nn_tilde/issues/92#issuecomment-3438803980 )
-    3. Add your custom RAVE model to this repo's "interfaces" folder
-    4. Open "interfaces/tambereen_interface_musicnet.maxpat" in Max MSP for use as a template patch. Replace the text "musicnet" in the "nn~ musicnet decode" box with your custom RAVE filename (excluding filename extension), and replace the text "16" in the "mc.unpack~ 16" box with the number of latent dimensions your custom RAVE model uses.
+
+    Advanced users: To use Tambereen Max interface for custom RAVE models...
+
+    - Add your custom RAVE model to this repo's "interfaces" folder
+    - Open "interfaces/tambereen_interface_musicnet.maxpat" in Max MSP for use as a template patch. Replace the text "musicnet" in the "nn~ musicnet decode" box with your custom RAVE filename (excluding filename extension), and replace the text "16" in the "mc.unpack~ 16" box with the number of latent dimensions your custom RAVE model uses. In "run_settings.py" set `MAX_INTERFACE_PATH` to your updated Max patch file path, and set `RAVE_MODEL` to the name of your custom RAVE filename path.  
 
     [If you don't want to use Max, set the `AudioMovementProjectorSettings.PYTHON_PLAY_AUDIO` variable in "run_settings.py" to `True`, and `AudioMovementProjectorSettings.CHUNK_BUFFER_SIZE` in "run_settings.py" to `10`, and the program will use python to play the audio instead of using Max. But Warning: If you use python instead of Max to play the audio, the live audio you hear during interaction -- though not the audio recorded to file -- will be choppy and delayed, and you won't be able to use the novelification interface which is implemented in Max.]
+
+
+    _[If you have an Intel-Chip Mac and do not need to use custom RAVE models, you can use a default "musicnet", "percussion", or "VCTK" RAVE model with Tambereen's Max interface without needing to explicitly install Max or nn_tilde -- Download the corresponding standalone Tambereen interface app from my Drive folder: https://drive.google.com/drive/folders/1IZOI1tm24UPqegra14_TkFS1Drl81CEU?usp=sharing , drag it to the "interfaces" folder of this repo, then unzip it by double-clicking on it. But for now, unless you have an Intel-chip Mac, please instead follow the instruction steps above to explicitly install Max MSP and nn_tilde. The standalone apps, which bypass the need to explicitly install Max MSP and nn_tilde, may currently be configured to only support Intel-chip Macs. We will add M-chip Mac interfaces soon.]_
 
 3. Open "Terminal" application (it is in your "Applications" folder in "Finder")
 
