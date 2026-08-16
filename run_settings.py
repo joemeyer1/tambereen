@@ -19,6 +19,7 @@ _RAVE_MODEL_INTERFACES_MAXPAT = {  # These are included in this repo but you nee
     'percussion': 'interfaces/tambereen_interface_percussion.maxpat',
     'musicnet': 'interfaces/tambereen_interface_musicnet.maxpat',
     'VCTK': 'interfaces/tambereen_interface_vctk.maxpat',
+    'sol_full': 'interfaces/tambereen_interface_sol_full.maxpat',
 }
 _RAVE_MODEL_INTERFACES_STANDALONE_APP = {  # These will need to be downloaded from https://drive.google.com/drive/folders/1IZOI1tm24UPqegra14_TkFS1Drl81CEU?usp=sharing but avoid the need for installing nn~
     'percussion': 'interfaces/tambereen_interface_percussion.app',
@@ -60,6 +61,7 @@ class AudioMovementProjectorSettings:
     # But for streaming audio in Python, each audio play() call is expensive, so better to bundle multiple audio embedding frames into each time chunk passed to play() (e.g. CHUNK_BUFFER_SIZE=10)
 
     pose_estimator_settings: PoseEstimatorSettings = PoseEstimatorSettings()
+    MOVEMENT_TRAINING_DATA_PATH: Optional[str] = None  # this can be set to movement video file path; if None then record new movement
 
     AUDIO_TRAINING_DATA_PATH: str = 'audio_training_data/percussion'
     USE_CACHE: bool = False  # For training data
