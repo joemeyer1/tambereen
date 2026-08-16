@@ -56,6 +56,7 @@ def train_audio_movement_projector(output_dir_path: str, run_settings: RunSettin
     keypoints_data_for_training = MovementStreamer(run_settings=run_settings).record_keypoints(
         max_frames=max_training_frames,
         output_filename=f"{output_dir_path}/movement_training_data.mp4",
+        input_filename=run_settings.audio_movement_projector_settings.MOVEMENT_TRAINING_DATA_PATH,
     )
     # sd.stop()
     if run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
