@@ -81,18 +81,21 @@ def play_audio(file_path: str, wait_for_playback_to_finish: bool = False):
         sd.wait()
 
 
-def convert_mp3_to_wav(existing_mp3_folder: str, new_wav_folder: str) -> None:
+def convert_folder_to_wav(existing_audio_folder: str, new_wav_folder: str) -> None:
+    import re
     from pydub import AudioSegment
-    for audio_filename in os.listdir(existing_mp3_folder):
-        from_audio_filepath = f"{existing_mp3_folder}/{audio_filename}"
-        audio_filepath = f"{new_wav_folder}/{audio_filename.replace('mp3','wav')}"
-        sound = AudioSegment.from_mp3(from_audio_filepath)
+    for audio_filename in os.listdir(existing_audio_folder):
+        from_audio_filepath = f"{existing_audio_folder}/{audio_filename}"
+        audio_filepath = f"{new_wav_folder}/{re.sub('\..*', '.wav', audio_filename)}"
+        sound = AudioSegment.from_file(from_audio_filepath)
         sound.export(audio_filepath, format="wav")
+
 
 def convert_file_to_wav(existing_filename: str, new_filename: str):
     from pydub import AudioSegment
     sound = AudioSegment.from_file(existing_filename)
     sound.export(new_filename, format="wav")
+
 
 class CustomDataset(Dataset):
     def __init__(self, data: torch.Tensor, metadata: Optional[torch.Tensor] = None):
