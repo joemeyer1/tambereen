@@ -61,7 +61,7 @@ class AudioMovementProjectorSettings:
     # But for streaming audio in Python, each audio play() call is expensive, so better to bundle multiple audio embedding frames into each time chunk passed to play() (e.g. CHUNK_BUFFER_SIZE=10)
 
     pose_estimator_settings: PoseEstimatorSettings = PoseEstimatorSettings()
-    MOVEMENT_TRAINING_DATA_PATH: Optional[str] = None  # this can be set to movement video file path; if None then record new movement
+    MOVEMENT_TRAINING_DATA_PATH: Optional[str] = None  # this can be set to movement video file path (e.g. "output_data_runs/0/movement_training_data.mp4"); if None then record new movement
 
     AUDIO_TRAINING_DATA_PATH: str = 'audio_training_data/percussion'
     USE_CACHE: bool = False  # For training data
