@@ -51,7 +51,8 @@ class PoseEstimatorSettings:
 
 @dataclass
 class AudioMovementProjectorSettings:
-    PRETRAINED_MODEL_PATH: Optional[str] = None  # If you use a pre-trained model, make sure POSE_ESTIMATOR_TYPE aligns
+    PRETRAINED_MODEL_PATH: Optional[str] = None  # this can be set to model run folder (e.g. "output_data_runs/0"); if None then train new model
+    # If you use a pre-trained model, make sure POSE_ESTIMATOR_TYPE aligns
     # If you try using a different pose estimator than the model was trained with, the pose keypoints passed won't align with those the model was trained with and you will get a tensor size mismatch error between actual input and model input dimensions
 
     PYTHON_PLAY_AUDIO: bool = False
@@ -61,7 +62,7 @@ class AudioMovementProjectorSettings:
     # But for streaming audio in Python, each audio play() call is expensive, so better to bundle multiple audio embedding frames into each time chunk passed to play() (e.g. CHUNK_BUFFER_SIZE=10)
 
     pose_estimator_settings: PoseEstimatorSettings = PoseEstimatorSettings()
-    MOVEMENT_TRAINING_DATA_PATH: Optional[str] = None  # this can be set to movement video file path; if None then record new movement
+    MOVEMENT_TRAINING_DATA_PATH: Optional[str] = None  # this can be set to movement video file path (e.g. "output_data_runs/0/movement_training_data.mp4"); if None then record new movement
 
     AUDIO_TRAINING_DATA_PATH: str = 'audio_training_data/percussion'
     USE_CACHE: bool = False  # For training data
