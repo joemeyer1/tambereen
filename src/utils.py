@@ -86,10 +86,10 @@ def convert_folder_to_wav(existing_audio_folder: str, new_wav_folder: str) -> No
     from pydub import AudioSegment
     for audio_filename in os.listdir(existing_audio_folder):
         from_audio_filepath = f"{existing_audio_folder}/{audio_filename}"
-        audio_filepath = f"{new_wav_folder}/{re.sub('\..*', '.wav', audio_filename)}"
+        new_filename = re.sub('\..*', '.wav', audio_filename)
+        audio_filepath = f"{new_wav_folder}/{new_filename}"
         sound = AudioSegment.from_file(from_audio_filepath)
         sound.export(audio_filepath, format="wav")
-
 
 def convert_file_to_wav(existing_filename: str, new_filename: str):
     from pydub import AudioSegment
