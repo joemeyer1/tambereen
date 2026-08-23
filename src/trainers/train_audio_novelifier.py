@@ -48,17 +48,7 @@ def train_audio_novelifier(
         audio_embeddings = audio_movement_projector.multimodal_projector.decode(multimodal_movement_embeddings)
     else:
         # GET MAX AUDIO FRAMES / EMBEDDINGS
-        max_audio_secs = run_settings.audio_novelifier_settings.MAX_AUDIO_SECS
-        if max_audio_secs is not None and max_audio_secs > 0:
-            samples_per_sec = 44100
-            max_audio_frames = int(max_audio_secs * samples_per_sec)
-
-            samples_per_embedding = 2048
-            embeddings_per_sec = samples_per_sec / samples_per_embedding
-            max_audio_embeddings = int(max_audio_secs * embeddings_per_sec)
-        else:
-            max_audio_frames = None
-            max_audio_embeddings = None
+        max_audio_frames, max_audio_embeddings = NovelifierTrainer._get_max_audio_frames_and_embeddings(max_audio_secs=run_settings.audio_novelifier_settings.MAX_AUDIO_SECS)
 
         audio_dir_paths = run_settings.audio_novelifier_settings.AUDIO_TRAINING_DATA_PATH
 
