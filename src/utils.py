@@ -84,6 +84,7 @@ def play_audio(file_path: str, wait_for_playback_to_finish: bool = False):
 def convert_folder_to_wav(existing_audio_folder: str, new_wav_folder: str) -> None:
     import re
     from pydub import AudioSegment
+    os.mkdir(new_wav_folder)
     for audio_filename in os.listdir(existing_audio_folder):
         from_audio_filepath = f"{existing_audio_folder}/{audio_filename}"
         new_filename = re.sub('\..*', '.wav', audio_filename)
