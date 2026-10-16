@@ -8,6 +8,7 @@ from typing import List
 
 import cv2
 import ffmpeg
+from fractions import Fraction
 import soundfile as sf
 
 import pandas as pd
@@ -177,7 +178,7 @@ class FileWriter(StreamerBase):
         def _get_fps(input_path: str) -> float:
             """Return the video's average frame rate (frames per second)."""
             probe = ffmpeg.probe(input_path, select_streams="v:0")
-            return float(ffmpeg.Fraction(probe["streams"][0]["avg_frame_rate"]))
+            return float(Fraction(probe["streams"][0]["avg_frame_rate"]))
         
         def sync_video_duration_to_audio(input_path_video: str, input_path_audio: str, output_path: str) -> None:
             video_fps = _get_fps(input_path_video)
