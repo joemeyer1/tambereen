@@ -87,7 +87,8 @@ class AudioMovementProjector(MovementProjector, KeypointsProjector, AudioProject
 
         if osc_stream_audio:
             if self.novelifier is not None:
-                audio_embeddings_novelified = torch.squeeze(self.novelifier.forward(audio_embeddings))
+                novelifier_device = next(self.novelifier.parameters()).device
+                audio_embeddings_novelified = torch.squeeze(self.novelifier.forward(audio_embeddings.to(novelifier_device)), dim=1)
                 audio_embedding_novelified_str = ' '.join(str(i) for i in audio_embeddings_novelified.tolist())
                 audio_embedding_novelified_str = re.sub(r"[\[\],]", "", audio_embedding_novelified_str)
                 self.osc.send_message(f"{self.address}_novel", audio_embedding_novelified_str)
@@ -107,5 +108,5 @@ class AudioMovementProjector(MovementProjector, KeypointsProjector, AudioProject
     
     def decode_audio_embs(self, audio_embs: torch.Tensor) -> torch.Tensor:
         decoded_audio = self.audio_projector.decode(audio_embs)
-        decoded_audio = torch.mean(decoded_audio, dim=1, keepdim=True)  # convert to mono
+        # decoded_audio = torch.mean(decoded_audio, dim=1, keepdim=True)  # convert to mono
         return decoded_audio

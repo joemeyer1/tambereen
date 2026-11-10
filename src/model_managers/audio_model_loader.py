@@ -4,7 +4,19 @@ import requests
 import torch
 
 
-class RaveLoader:
+class AudioModelLoader:
+
+    def load_model(self, model_name: str):
+        model_file_path = f'pretrained_model_checkpoints/audio_model_checkpoints/{model_name}.ts'
+        if os.path.exists(model_file_path):
+            print(f"loading model from {model_file_path}")
+        else:
+            model_url = f'https://play.forum.ircam.fr/rave-vst-api/get_model/{model_name}'
+            print(f"loading model from {model_file_path}")
+            model = self.download_file_from_url(model_url, model_file_path)
+        model = torch.jit.load(model_file_path).eval()
+        return model
+        
 
     def download_official_model_by_name(self, model_name: str):
         """Returns official RAVE model from ACIDS' website."""

@@ -7,12 +7,12 @@ import os
 import pandas as pd
 import torch
 
-from src.model_managers.rave_loader import RaveLoader
+from src.model_managers.audio_model_loader import AudioModelLoader
 from src.projectors.audio_movement_projector import AudioMovementProjector
 from src.projectors.data_normalizer import DataNormalizer
 from src.streamers.movement_streamer import MovementStreamer
 from src.trainers.train_autoencoder import train_autoencoder
-from src.utils import get_audio_data, resize_tensor
+from src.utils import get_audio_data, resize_tensor, get_best_device
 from run_settings import RunSettings
 
 
@@ -21,18 +21,15 @@ def train_audio_movement_projector(output_dir_path: str, run_settings: RunSettin
     if not os.path.exists(output_dir_path):
         os.mkdir(output_dir_path)
 
-    # rave_model_name, audio_dir_paths = 'percussion', 'audio_training_data/percussion'
-    # rave_model_name, audio_dir_paths = 'musicnet', 'audio_training_data/violin'
-    rave_model_name, audio_dir_paths = run_settings.RAVE_MODEL, run_settings.audio_movement_projector_settings.AUDIO_TRAINING_DATA_PATH
+    pretrained_audio_model = AudioModelLoader().load_model(model_name=run_settings.AUDIO_MODEL)
 
-    pretrained_rave_model = RaveLoader().download_official_model_by_name(model_name=rave_model_name)
-
-    RAVE_EMBS_PER_SEC = 2048
+    AUDIO_EMBS_PER_SEC = 2048
     if run_settings.audio_movement_projector_settings.MAX_AUDIO_SECS is not None:
-        max_training_frames = int(run_settings.audio_movement_projector_settings.MAX_AUDIO_SECS * RAVE_EMBS_PER_SEC)
+        max_training_frames = int(run_settings.audio_movement_projector_settings.MAX_AUDIO_SECS * AUDIO_EMBS_PER_SEC)
     else:
         max_training_frames = None
     
+    audio_dir_paths = run_settings.audio_movement_projector_settings.AUDIO_TRAINING_DATA_PATH
     audio_embeddings_cache_path = f"{'/'.join(audio_dir_paths.split('/')[:-1])}/_cached_embeddings/" \
                                   f"{audio_dir_paths.split('/')[-1]}.pt"
     if run_settings.audio_movement_projector_settings.USE_CACHE and os.path.exists(audio_embeddings_cache_path):
@@ -44,7 +41,7 @@ def train_audio_movement_projector(output_dir_path: str, run_settings: RunSettin
         audio_data, audio_sample_rate = get_audio_data(audio_dir_paths=audio_dir_paths, max_audio_frames=max_training_frames)
 
         # encode audio
-        audio_embeddings = AudioMovementProjector(audio_projector=pretrained_rave_model).embed_audio(audio_data)
+        audio_embeddings = AudioMovementProjector(audio_projector=pretrained_audio_model.to(get_best_device())).embed_audio(audio_data).to('cpu')
         print(f"Caching audio embeddings...")
         if not os.path.exists(f"{'/'.join(audio_embeddings_cache_path.split('/')[:-1])}"):
             os.mkdir(f"{'/'.join(audio_embeddings_cache_path.split('/')[:-1])}")
@@ -57,6 +54,7 @@ def train_audio_movement_projector(output_dir_path: str, run_settings: RunSettin
         max_frames=max_training_frames,
         output_filename=f"{output_dir_path}/movement_training_data.mp4",
         input_filename=run_settings.audio_movement_projector_settings.MOVEMENT_TRAINING_DATA_PATH,
+        show=run_settings.audio_movement_projector_settings.MOVEMENT_TRAINING_DATA_PATH is None,
     )
     # sd.stop()
     if run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
@@ -68,7 +66,7 @@ def train_audio_movement_projector(output_dir_path: str, run_settings: RunSettin
     if run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
         pd.DataFrame(normalized_keypoints_data_for_training).to_csv('normalized_keypoints_data_for_training.csv')
 
-    # train encoder to project keypoints into a latent space of same dimension as RAVE's latent space (e.g. "4")
+    # train encoder to project keypoints into a latent space of same dimension as the audio model's latent space (e.g. "4")
     keypoints_projector = train_autoencoder(
         input_dim=normalized_keypoints_data_for_training.shape[1],
         dense_dim=24,
@@ -101,13 +99,13 @@ def train_audio_movement_projector(output_dir_path: str, run_settings: RunSettin
 
     # normalize and combine embeddings
     keypoints_embeddings_normalizer = DataNormalizer(keypoints_embeddings_for_training)
-    normalized_keypoints_embeddings_for_training = keypoints_embeddings_normalizer.normalize_data(keypoints_embeddings_for_training)
+    normalized_keypoints_embeddings_for_training = keypoints_embeddings_normalizer.normalize_data(keypoints_embeddings_for_training).to('cpu')
 
     if run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
         pd.DataFrame(normalized_keypoints_embeddings_for_training).to_csv('normalized_keypoints_embeddings_for_training.csv')
 
     audio_embeddings_normalizer = DataNormalizer(audio_embeddings)
-    normalized_audio_embeddings_for_training = audio_embeddings_normalizer.normalize_data(audio_embeddings)
+    normalized_audio_embeddings_for_training = audio_embeddings_normalizer.normalize_data(audio_embeddings).to('cpu')
 
     if run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
         pd.DataFrame(normalized_audio_embeddings_for_training).to_csv('normalized_audio_embeddings_for_training.csv')
@@ -117,7 +115,7 @@ def train_audio_movement_projector(output_dir_path: str, run_settings: RunSettin
     if run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
         pd.DataFrame(combined_embeddings).to_csv('combined_normalized_embeddings.csv')
 
-    # train shared space projector on keypoints and rave embeddings (which exist in same-dim space)
+    # train shared space projector on keypoints and audio embeddings (which exist in same-dim space)
     multimodal_projector = train_autoencoder(
         input_dim=audio_embeddings.shape[1],
         dense_dim=int(1.5 * audio_embeddings.shape[1]),
@@ -153,7 +151,7 @@ def train_audio_movement_projector(output_dir_path: str, run_settings: RunSettin
         pd.DataFrame(denormalized_multimodal_training_output).to_csv('denormalized_multimodal_training_output.csv')
 
     return AudioMovementProjector(
-        audio_projector=pretrained_rave_model,
+        audio_projector=pretrained_audio_model,
         keypoints_projector=keypoints_projector,
         multimodal_projector=multimodal_projector,
     )

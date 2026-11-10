@@ -46,9 +46,9 @@ class FileWriter(StreamerBase):
             )
         if self.run_settings.logging_settings.ENABLE_MOVEMENT_LOGGING:
             self.write_movement_to_file(
-                movement_chunks=[time_chunk.movement_chunk for time_chunk in time_chunks],
+                # movement_chunks=[time_chunk.movement_chunk for time_chunk in time_chunks],
                 output_filename=soundless_video_output_filename,
-                draw_keypoints_to_frame=draw_keypoints_to_frame,
+                # draw_keypoints_to_frame=draw_keypoints_to_frame,
             )
         if self.run_settings.logging_settings.ENABLE_AUDIO_LOGGING and self.run_settings.logging_settings.ENABLE_MOVEMENT_LOGGING:
             self.write_audio_movement_video(
@@ -70,49 +70,63 @@ class FileWriter(StreamerBase):
             pd.DataFrame(torch.concatenate([time_chunk.audio_chunk.embedding_frames for time_chunk in time_chunks])).to_csv(make_name_unique(f"{model_dir}/audio_output/audio_embeddings.csv"))
 
         audio_movement_projector = ModelFileManager.load_model_back_compat(f"{model_dir}/model")
+        if self.run_settings._is_stable_audio_3 and len(time_chunks) % 2 == 1:
+            time_chunks = time_chunks[:len(time_chunks) - len(time_chunks)%2]
         if audio_movement_projector.novelifier is not None:
-            novelified_embeddings = audio_movement_projector.novelifier.forward(torch.concatenate([time_chunk.audio_chunk.embedding_frames for time_chunk in time_chunks]))
+            novelified_embeddings = audio_movement_projector.novelifier.to('cpu').forward(torch.concatenate([time_chunk.audio_chunk.embedding_frames for time_chunk in time_chunks]).to('cpu'))
             if self.run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
                 pd.DataFrame(novelified_embeddings).to_csv(make_name_unique(f"{model_dir}/audio_output/novelified_audio_embeddings.csv"))
-            novelified_audio = torch.concatenate([audio_movement_projector.decode_audio_embs(novelified_embedding.expand(1, 1, -1).transpose(1, 2)) for novelified_embedding in novelified_embeddings]).flatten()
+            # fmt = '\n'.join([str(novelified_embedding.shape) for novelified_embedding in novelified_embeddings])
+            # print(f'dbg4398:: {novelified_embeddings.shape}')
+
+            novelified_embeddings = novelified_embeddings.transpose(0, 1).expand(1, -1, -1)
+            # print(f'dbg0398:: {novelified_embeddings.shape}')
+            novelified_audio = audio_movement_projector.decode_audio_embs(novelified_embeddings.to(next(audio_movement_projector.audio_projector.parameters()).device)).detach().cpu().squeeze(0).transpose(0, 1).numpy()
             novelified_audio_output_filename = audio_output_filename.replace('.', '_novelified.')
             sf.write(make_name_unique(novelified_audio_output_filename), novelified_audio, audio_sample_rate)
-        audio_chunks = torch.concatenate([audio_movement_projector.decode_audio_embs(time_chunk.audio_chunk.embedding_frames.expand(1, -1, -1).transpose(1, 2)) for time_chunk in time_chunks])
-        audio_chunks = audio_chunks.flatten()
+        audio_embeddings = torch.cat([time_chunk.audio_chunk.embedding_frames for time_chunk in time_chunks], dim=0)
+        # print(f"dbg4380: {audio_embeddings.shape}")
+        audio_embeddings = audio_embeddings.transpose(0, 1).expand(1, -1, -1)
+        # print(f"dbg4380: {audio_embeddings.shape}")
+        audio_chunks = audio_movement_projector.decode_audio_embs(audio_embeddings.to(next(audio_movement_projector.audio_projector.parameters()).device)).detach().cpu().squeeze(0).transpose(0, 1).numpy()
         sf.write(audio_output_filename, audio_chunks, audio_sample_rate)
 
     def write_movement_to_file(
         self,
-        movement_chunks: List[MovementChunk],
+        # movement_chunks: List[MovementChunk],
         output_filename: str,
-        draw_keypoints_to_frame: bool,
+        # draw_keypoints_to_frame: bool,
     ):
         """Writes recorded movement to file."""
 
-        movement_projector = MovementProjector()
-        movement_projector.load_movement_projector(audio_movement_projector_settings=self.run_settings.audio_movement_projector_settings)
+        if os.path.exists('out.mp4'):
+            os.system(f"cp out.mp4 {output_filename}")
+            os.system(f"mv out.mp4 out0.mp4")
 
-        cap = cv2.VideoCapture(0)
-        frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        cap.release()
+        # movement_projector = MovementProjector()
+        # movement_projector.load_movement_projector(audio_movement_projector_settings=self.run_settings.audio_movement_projector_settings)
 
-        audio_samples_per_rave_embedding = 2048
-        audio_samples_per_second = 44100
-        rave_embeddings_per_second = audio_samples_per_second / audio_samples_per_rave_embedding
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(filename=output_filename, fourcc=fourcc, fps=rave_embeddings_per_second, frameSize=(frame_width, frame_height))
-        for movement_chunk in movement_chunks:
-            frames = movement_chunk.frames
-            for frame in frames:
-                if draw_keypoints_to_frame:
-                    keypoints_with_scores = movement_projector.proj_movement_frame_to_keypoints(movement_frame=frame)
-                    # Rendering
-                    draw_connections(frame, keypoints=keypoints_with_scores)
-                    draw_keypoints(frame, keypoints=keypoints_with_scores)
-                out.write(frame)
-        out.release()
-        cv2.destroyAllWindows()
+        # cap = cv2.VideoCapture(0)
+        # frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        # frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        # cap.release()
+
+        # audio_samples_per_audio_embedding = 2048
+        # audio_samples_per_second = 44100
+        # audio_embeddings_per_second = audio_samples_per_second / audio_samples_per_audio_embedding
+        # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        # out = cv2.VideoWriter(filename=output_filename, fourcc=fourcc, fps=audio_embeddings_per_second, frameSize=(frame_width, frame_height))
+        # for movement_chunk in movement_chunks:
+        #     frames = movement_chunk.frames
+        #     for frame in frames:
+        #         if draw_keypoints_to_frame:
+        #             keypoints_with_scores = movement_projector.proj_movement_frame_to_keypoints(movement_frame=frame)
+        #             # Rendering
+        #             draw_connections(frame, keypoints=keypoints_with_scores)
+        #             draw_keypoints(frame, keypoints=keypoints_with_scores)
+        #         out.write(frame)
+        # out.release()
+        # cv2.destroyAllWindows()
 
     def write_audio_movement_video(
             self,

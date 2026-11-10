@@ -3,6 +3,7 @@
 
 
 import os
+import time
 from typing import Any, Callable, List, Optional, Tuple, Dict
 
 import matplotlib.pyplot as plt
@@ -13,13 +14,13 @@ import torch
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 
-from src.model_managers.rave_loader import RaveLoader
+from src.model_managers.audio_model_loader import AudioModelLoader
 from src.model_managers.model_file_manager import ModelFileManager
 from src.projectors.audio_movement_projector import AudioMovementProjector
 from src.projectors.novelifier import Novelifier
 from src.streamers.movement_streamer import MovementStreamer
 from src.trainers._embeddings_assessor import EmbeddingsAssessor
-from src.utils import get_audio_data, make_name_unique, CustomDataset
+from src.utils import get_audio_data, make_name_unique, get_best_device, CustomDataset
 
 from run_settings import RunSettings
 
@@ -31,7 +32,11 @@ def train_audio_novelifier(
         output_dir_path: str,
 ) -> Novelifier:
 
-    pretrained_rave_model = RaveLoader().download_official_model_by_name(model_name=run_settings.RAVE_MODEL)
+    if run_settings._is_stable_audio_3 and batch_size % 2 == 1:
+        print(f"Batch size for training audio novelifier cannot be odd for Stable Audio 3 models, which can only decode embeddings in multiples of 2. Adjusting batch size from '{batch_size}' to '{batch_size + 1}'.")
+        batch_size += 1
+
+    pretrained_audio_model = AudioModelLoader().load_model(model_name=run_settings.AUDIO_MODEL).to(get_best_device())
     max_audio_frames, max_audio_embeddings = NovelifierTrainer._get_max_audio_frames_and_embeddings(max_audio_secs=run_settings.audio_novelifier_settings.MAX_AUDIO_SECS)
     if run_settings.audio_novelifier_settings.AUDIO_TRAINING_DATA_PATH is None:
         recent_output_data_run = max((x for x in os.listdir('output_data_runs') if x.isdigit()), key=lambda x: os.path.getmtime(f'output_data_runs/{x}'))
@@ -57,26 +62,27 @@ def train_audio_novelifier(
                                     f"{audio_dir_paths.split('/')[-1]}.pt"
         if run_settings.audio_novelifier_settings.USE_CACHE and os.path.exists(audio_embeddings_cache_path):
             print(f"Loading cached audio embeddings...")
-            audio_embeddings = torch.load(audio_embeddings_cache_path)
+            audio_embeddings = torch.load(audio_embeddings_cache_path, map_location='cpu')
             if max_audio_embeddings is not None:
                 audio_embeddings = audio_embeddings[:max_audio_embeddings]
         else:
             audio_data, audio_sample_rate = get_audio_data(audio_dir_paths=audio_dir_paths, max_audio_frames=max_audio_frames)
 
-            if len(audio_data.shape) > 1:  # convert to mono
+            if not run_settings._is_stable_audio and len(audio_data.shape) > 1:  # convert to mono
                 audio_data = audio_data.mean(1)
 
             # encode audio
-            audio_embeddings = AudioMovementProjector(audio_projector=pretrained_rave_model).embed_audio(audio_data)
+            audio_embeddings = AudioMovementProjector(audio_projector=pretrained_audio_model).embed_audio(audio_data).to('cpu')
             print(f"Caching audio embeddings...")
             if not os.path.exists(f"{'/'.join(audio_embeddings_cache_path.split('/')[:-1])}"):
                 os.mkdir(f"{'/'.join(audio_embeddings_cache_path.split('/')[:-1])}")
             torch.save(audio_embeddings, audio_embeddings_cache_path)
 
+    # audio_embeddings = audio_embeddings.to('cpu')
     audio_embeddings = audio_embeddings[torch.randperm(audio_embeddings.shape[0])]  # shuffle audio embeddings
     rand_perm_audio_embeddings = audio_embeddings[torch.randperm(audio_embeddings.shape[0])]  # new shuffle for reference
     print(f"dataset shape: ({audio_embeddings.shape}, {rand_perm_audio_embeddings.shape})")
-    audio_embeddings_dataset = CustomDataset(audio_embeddings, metadata=rand_perm_audio_embeddings)  # , metadata=pretrained_rave_model.decode(audio_embeddings).expand(1, -1, -1)).reshape(-1))
+    audio_embeddings_dataset = CustomDataset(audio_embeddings, metadata=rand_perm_audio_embeddings)
     if run_settings.audio_novelifier_settings.TEST_DATA_FRACTION > 0:
         train_data, test_data = audio_embeddings_dataset.split(run_settings.audio_novelifier_settings.TEST_DATA_FRACTION)
     else:
@@ -84,7 +90,7 @@ def train_audio_novelifier(
     data_loader = DataLoader(train_data, batch_size=batch_size, shuffle=shuffle_each_epoch)
 
     # TRAIN
-    novelifier_trainer = NovelifierTrainer(pretrained_rave_model=pretrained_rave_model, output_dir_path=output_dir_path, run_settings=run_settings)
+    novelifier_trainer = NovelifierTrainer(pretrained_audio_model=pretrained_audio_model, output_dir_path=output_dir_path, run_settings=run_settings)
     novelifier = novelifier_trainer.train_novelifier(
         latent_dim=audio_embeddings.shape[1],
         dense_dim=audio_embeddings.shape[1],
@@ -99,15 +105,16 @@ class NovelifierTrainer(EmbeddingsAssessor):
     output_dir_path: str
     run_settings: RunSettings
 
-    def __init__(self, pretrained_rave_model, output_dir_path: str, run_settings: RunSettings, instability_tolerance: float = 1.2):
+    def __init__(self, pretrained_audio_model, output_dir_path: str, run_settings: RunSettings, instability_tolerance: float = 1.2):
         EmbeddingsAssessor.__init__(self, instability_tolerance=instability_tolerance)
-        self.pretrained_rave_model = pretrained_rave_model
+        self.device = get_best_device()
+        self.pretrained_audio_model = pretrained_audio_model.to(self.device)
         self.run_settings = run_settings
         self.output_dir_path = output_dir_path
 
     def train_novelifier(self, latent_dim: int, dense_dim: int, data_loader: DataLoader, epochs: int = 200, test_data: Optional[CustomDataset] = None) -> Novelifier:
 
-        novelifier = Novelifier(latent_dim=latent_dim, dense_dim=dense_dim, submodule_names=['divergence', 'stability'])
+        novelifier = Novelifier(latent_dim=latent_dim, dense_dim=dense_dim, submodule_names=['divergence', 'stability']).to(self.device)
         super_optimizer = torch.optim.Adam(novelifier.parameters(), lr=.001, maximize=True)
 
         divergence_module = novelifier.submodules['divergence']
@@ -132,7 +139,7 @@ class NovelifierTrainer(EmbeddingsAssessor):
 
     def train_simple_novelifier(self, latent_dim: int, dense_dim: int, data_loader: DataLoader, epochs: int = 200, test_data: Optional[CustomDataset] = None) -> Novelifier:
 
-        novelifier = Novelifier(latent_dim=latent_dim, dense_dim=dense_dim)
+        novelifier = Novelifier(latent_dim=latent_dim, dense_dim=dense_dim).to(self.device)
         super_optimizer = torch.optim.Adam(novelifier.parameters(), lr=.001, maximize=True)
 
         name_to_optim_objective = {
@@ -163,15 +170,25 @@ class NovelifierTrainer(EmbeddingsAssessor):
         if test_data is not None:
             reward_labels += '\t' + 'test'
             submodule_name_to_rewards['test'] = []
+            if test_data.metadata is None:
+                raise ValueError("test_data must include reference metadata.")
+            test_embeddings = test_data.data.to(self.device)
+            test_embeddings_ref = test_data.metadata.to(self.device)
+        else:
+            test_embeddings = None
+            test_embeddings_ref = None
         print(reward_labels)
         evolving_novelified_audio: List[np.ndarray] = []
         best_model_state_dict = None
+        best_epoch = None
         with tqdm(range(epochs), desc=f'Training Modules') as epoch_counter:
 
             for epoch_i in epoch_counter:
                 try:
                     submodule_name_to_epoch_rewards: Dict[str, List[float]] = {name: [] for name in name_to_optim_objective}
                     for batch_i, (batch_embeddings, batch_embeddings_ref) in enumerate(data_loader):
+                        batch_embeddings = batch_embeddings.to(self.device)
+                        batch_embeddings_ref = batch_embeddings_ref.to(self.device)
                         for (submodule_name, (optimizer, objective)) in name_to_optim_objective.items():
                             optimizer.zero_grad()
                             batch_reward = self._compute_objective(
@@ -190,14 +207,15 @@ class NovelifierTrainer(EmbeddingsAssessor):
                     with torch.no_grad():
                         if test_data is not None:
                             test_reward = self._compute_objective(
-                                embeddings_original=test_data.data,
-                                embeddings_ref=test_data.metadata,
+                                embeddings_original=test_embeddings,
+                                embeddings_ref=test_embeddings_ref,
                                 novelifier=novelifier,
                                 objective=self.assess_transformed_embeddings,
                                 evolving_novelified_audio=evolving_novelified_audio,
                             )
-                            if len(submodule_name_to_rewards['test']) > 0 and test_reward > max(submodule_name_to_rewards['test']):
+                            if (len(submodule_name_to_rewards['test']) == 0 or test_reward > max(submodule_name_to_rewards['test'])) and torch.isfinite(test_reward):
                                 best_model_state_dict = novelifier.state_dict()
+                                best_epoch = epoch_i
                             submodule_name_to_rewards['test'].append(round(test_reward.item(), 4))
                             epoch_rewards_msg += f"{round(test_reward.item(), 4)}"
 
@@ -217,8 +235,12 @@ class NovelifierTrainer(EmbeddingsAssessor):
                     break
             torch.set_grad_enabled(False)
             print(f'Done training submodules {name_to_optim_objective.keys()}')
+            try:  # if the user manually interrupts training within a half second of it finishing, they probably meant to interrupt training and don't actually want to kill the program
+                time.sleep(.5)
+            except KeyboardInterrupt:
+                pass
             if best_model_state_dict is not None:
-                print(f"Restoring best model state from epoch '{np.argmax(submodule_name_to_rewards['test'])}'")
+                print(f"Restoring best model state from epoch '{best_epoch}'")
                 novelifier.load_state_dict(best_model_state_dict)
 
             if self.run_settings.logging_settings.ENABLE_MODEL_METADATA_LOGGING:
@@ -249,24 +271,27 @@ class NovelifierTrainer(EmbeddingsAssessor):
             evolving_novelified_audio: Optional[List[np.ndarray]] = None,
     ) -> torch.Tensor:
 
+        # embeddings_original = embeddings_original.to(self.device)
+        # embeddings_ref = embeddings_ref.to(self.device)
         embeddings_transformed = novelifier.forward(embeddings_original, submodule_name=submodule_name)
 
         embeddings_ref_transformed = novelifier.forward(embeddings_ref)
 
         with torch.no_grad():
             embeddings_transformed_formatted = embeddings_transformed.transpose(0, 1).expand(1, -1, -1)
-            novelified_audio = self.pretrained_rave_model.decode(embeddings_transformed_formatted)
-            if novelified_audio.shape[1] > 1:  # convert to mono
+            novelified_audio = self.pretrained_audio_model.decode(embeddings_transformed_formatted)
+            if not self.run_settings._is_stable_audio and novelified_audio.shape[1] > 1:  # convert to mono
                 novelified_audio = novelified_audio.mean(1).expand(1, -1, -1)
+            novelified_audio = novelified_audio.expand(1, -1, -1)
 
             if evolving_novelified_audio is not None:
-                novelifed_audio_np = novelified_audio.reshape(-1).numpy()
+                novelifed_audio_np = novelified_audio.detach().reshape(-1).cpu().numpy()
                 evolving_novelified_audio.append(novelifed_audio_np)
                 if not self.run_settings.audio_novelifier_settings.MUTE_DURING_TRAINING:
                     sd.play(novelifed_audio_np, samplerate=44100)
 
-            embeddings_transformed_prime = self.pretrained_rave_model.encode(novelified_audio)
-            embeddings_silence = self.pretrained_rave_model.encode(torch.zeros_like(novelified_audio))
+            embeddings_transformed_prime = self.pretrained_audio_model.encode(novelified_audio)
+            embeddings_silence = self.pretrained_audio_model.encode(torch.zeros_like(novelified_audio))
 
         reward = objective(
             embeddings_original=embeddings_original,  # embeddings before transformation,
@@ -281,7 +306,7 @@ class NovelifierTrainer(EmbeddingsAssessor):
 
     @staticmethod
     def _get_max_audio_frames_and_embeddings(max_audio_secs: Optional[int]) -> Tuple[Optional[int], Optional[int]]:
-        """Helper for train_audio_novelifier(). Returns (max number of sample frames (i.e. standardized to 44100 per second sample rate), max number of audio embeddings (i.e. 2048 RAVE embeddings per second of audio)."""
+        """Helper for train_audio_novelifier(). Returns (max number of sample frames (i.e. standardized to 44100 per second sample rate), max number of audio embeddings (i.e. 2048 RAVE/SAO embeddings per second of audio)."""
         if max_audio_secs is not None and max_audio_secs > 0:
             samples_per_sec = 44100
             max_audio_frames = int(max_audio_secs * samples_per_sec)

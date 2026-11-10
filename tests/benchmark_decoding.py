@@ -4,7 +4,7 @@ from time import time_ns
 
 import torch
 
-from src.model_managers.rave_loader import RaveLoader
+from src.model_managers.audio_model_loader import AudioModelLoader
 
 torch.set_grad_enabled(False)
 
@@ -12,7 +12,7 @@ torch.set_grad_enabled(False)
 def benchmark_decoding(iters: int = 1000):
     """Returns time (ms) per embedding decoding."""
 
-    audio_projector = RaveLoader().download_official_model_by_name('percussion')
+    audio_projector = AudioModelLoader().load_model('percussion')
     embeddings = torch.randn(iters, 4)
 
     start = time_ns()

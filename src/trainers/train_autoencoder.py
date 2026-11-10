@@ -3,6 +3,7 @@
 
 
 import os
+import time
 from typing import Optional
 
 import numpy as np
@@ -50,6 +51,7 @@ def train_autoencoder(
         print(f"\ttrain\ttest")
         test_losses = []
     best_model_state_dict = None
+    best_epoch = None
 
     data_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=shuffle_each_epoch)
 
@@ -76,10 +78,11 @@ def train_autoencoder(
                     with torch.no_grad():
                         test_output = autoencoder.forward(test_dataset.data)
                         test_loss = loss_fn(test_output, test_dataset.data).item()
-                        test_losses.append(test_loss)
                         msg += f"\t{round(test_loss, 4)}"
-                        if len(test_losses) > 0 and test_loss > max(test_losses):
+                        if len(test_losses) == 0 or test_loss < min(test_losses):
                             best_model_state_dict = autoencoder.state_dict()
+                            best_epoch = epoch_i
+                        test_losses.append(test_loss)
                 epoch_counter.write(msg)
                 if test_fraction > 0:
                     if len(test_losses) > overfit_epochs + 1:
@@ -91,8 +94,13 @@ def train_autoencoder(
                 print("Training interrupted by user (KeyboardInterrupt).")
                 break
     print(f'Done training {model_name}')
+    try:  # if the user manually interrupts training within a half second of it finishing, they probably meant to interrupt training and don't actually want to kill the program
+        time.sleep(.5)
+    except KeyboardInterrupt:
+        pass
+
     if best_model_state_dict is not None:
-        print(f"Restoring best model state from epoch '{np.argmax(test_losses)}'")
+        print(f"Restoring best model state from epoch '{best_epoch}'")
         autoencoder.load_state_dict(best_model_state_dict)
 
     if enable_model_metadata_logging:
