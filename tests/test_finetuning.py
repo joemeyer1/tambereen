@@ -17,8 +17,8 @@ def test_finetuning(model_dirname: str = 'output_data_runs/0', finetuning_path: 
     os.mkdir(output_dir_path)
 
     if run_settings.audio_movement_projector_settings.MAX_AUDIO_SECS is not None:
-        RAVE_EMBS_PER_SEC = 2048
-        max_training_frames = int(run_settings.audio_movement_projector_settings.MAX_AUDIO_SECS * RAVE_EMBS_PER_SEC)
+        AUDIO_EMBS_PER_SEC = 2048
+        max_training_frames = int(run_settings.audio_movement_projector_settings.MAX_AUDIO_SECS * AUDIO_EMBS_PER_SEC)
     else:
         max_training_frames = None
 
