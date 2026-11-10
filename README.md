@@ -1,4 +1,4 @@
-
+Stable Audio Open VAE checkpoint: [Google Drive link](https://drive.google.com/file/d/18J5kuwFjv1uFFq4h5a-XtpsmbhsRX7bn/view?usp=sharing), it should go to the `pretrained_model_checkpoints/audio_model_checkpoints` folder.
 
 ![tambreeen interface](readme_figs/tambereen_interface_screenshot.png)
 
@@ -19,11 +19,11 @@ _[A video demonstration of Tambereen's features can be found on Youtube (by clic
 
 To set up (on a Mac):
 
-1. Download this GitHub repository https://github.com/joemeyer1/tambereen
+1. Download this GitHub repository https://github.com/joemeyer1/movement-to-sound-generation
 
     If you aren't familiar with Git or Python, do the following:
     
-    - Navigate to https://github.com/joemeyer1/tambereen in your web browser
+    - Navigate to https://github.com/joemeyer1/movement-to-sound-generation in your web browser
     - Click the green "Code" tab in the upper right corner of the web page
     - Click "Download Zip"
     - After repository has downloaded, go to your "Downloads" folder and double-click the zip file
@@ -33,15 +33,15 @@ To set up (on a Mac):
     1. Download Max MSP (it has a free trial version which allows you to use and modify the .maxpat interfaces): https://cycling74.com/downloads 
     2. Download nn_tilde (source: https://github.com/acids-ircam/nn_tilde , troubleshooting: https://github.com/acids-ircam/nn_tilde/issues/92#issuecomment-3438803980 )
 
-    Advanced users: To use Tambereen Max interface for custom RAVE models...
+    Advanced users: To use Tambereen Max interface for custom audio models...
 
-    - Add your custom RAVE model to this repo's "pretrained_model_checkpoints/rave_model_checkpoints" folder and "interfaces" folder
-    - Open "interfaces/tambereen_interface_musicnet.maxpat" in Max MSP for use as a template patch. Replace the text "musicnet" in the "nn~ musicnet decode" box with your custom RAVE filename (excluding filename extension), and replace the text "16" in the "mc.unpack~ 16" box with the number of latent dimensions your custom RAVE model uses. In "run_settings.py" set `MAX_INTERFACE_PATH` to your updated Max patch file path, and set `RAVE_MODEL` to the name of your custom RAVE filename path.  
+    - Add your custom audio model to this repo's "pretrained_model_checkpoints/audio_model_checkpoints" folder and "interfaces" folder
+    - Open "interfaces/tambereen_interface_musicnet.maxpat" in Max MSP for use as a template patch. Replace the text "musicnet" in the "nn~ musicnet decode" box with your custom audio model filename (excluding filename extension), and replace the text "16" in the "mc.unpack~ 16" box with the number of latent dimensions your custom audio model uses. In "run_settings.py" set `MAX_INTERFACE_PATH` to your updated Max patch file path, and set `AUDIO_MODEL` to the name of your custom audio model filename path.  
 
     [If you don't want to use Max, set the `AudioMovementProjectorSettings.PYTHON_PLAY_AUDIO` variable in "run_settings.py" to `True`, and `AudioMovementProjectorSettings.CHUNK_BUFFER_SIZE` in "run_settings.py" to `10`, and the program will use python to play the audio instead of using Max. But Warning: If you use python instead of Max to play the audio, the live audio you hear during interaction -- though not the audio recorded to file -- will be choppy and delayed, and you won't be able to use the novelification interface which is implemented in Max.]
 
 
-    _[If you have an Intel-Chip Mac and do not need to use custom RAVE models, you can use a default "musicnet", "percussion", or "VCTK" RAVE model with Tambereen's Max interface without needing to explicitly install Max or nn_tilde -- Download the corresponding standalone Tambereen interface app from my Drive folder: https://drive.google.com/drive/folders/1IZOI1tm24UPqegra14_TkFS1Drl81CEU?usp=sharing , drag it to the "interfaces" folder of this repo, then unzip it by double-clicking on it. But for now, unless you have an Intel-chip Mac, please instead follow the instruction steps above to explicitly install Max MSP and nn_tilde. The standalone apps, which bypass the need to explicitly install Max MSP and nn_tilde, are currently configured to only support Intel-chip Macs. We will add M-chip Mac interfaces soon.]_
+    _[If you have an Intel-Chip Mac and do not need to use custom audio models, you can use a default "musicnet", "percussion", or "VCTK" RAVE model with Tambereen's Max interface without needing to explicitly install Max or nn_tilde -- Download the corresponding standalone Tambereen interface app from my Drive folder: https://drive.google.com/drive/folders/1IZOI1tm24UPqegra14_TkFS1Drl81CEU?usp=sharing , drag it to the "interfaces" folder of this repo, then unzip it by double-clicking on it. But for now, unless you have an Intel-chip Mac, please instead follow the instruction steps above to explicitly install Max MSP and nn_tilde. The standalone apps, which bypass the need to explicitly install Max MSP and nn_tilde, are currently configured to only support Intel-chip Macs. We will add M-chip Mac interfaces soon.]_
 
 3. Open "Terminal" application (it is in your "Applications" folder in "Finder")
 
@@ -49,7 +49,7 @@ To set up (on a Mac):
 
     If you aren't familiar with Git or Python, do the following:
     
-    - Type ```cd ~/Downloads/tambereen-main``` into Terminal window, then press "Enter" key
+    - Type ```cd ~/Downloads/movement-to-sound-generation-main``` into Terminal window, then press "Enter" key
     
 5. Copy the following block of commands into Terminal window, then press "Enter" key:
 
@@ -74,7 +74,7 @@ To set up (on a Mac):
     - Once the software is installed, you can run it any time by opening "Terminal" application, copying and pasting the following code block into the Terminal window, then pressing "Enter" key:
 
         ```
-        cd ~/Downloads/tambereen-main
+        cd ~/Downloads/movement-to-sound-generation-main
     
         source env/bin/activate
     
@@ -84,7 +84,7 @@ To set up (on a Mac):
 Note: You can modify run settings by changing variables of the Settings classes in "run_settings.py". 
 
 Training Flow for Tambereen:
-    When Tambereen is run, it will initially do some set-up work (e.g. preparing audio models and audio training embeddings), which may take a moment. Then it will display camera feed (i.e. from your computer's built-in camera) in a new window, and you may demonstrate the movements you want to use to interact with it. When you are done demonstrating your movements, press "q" on your keyboard and the model will train mappings from your demonstrated movements to the audio specified by the `AUDIO_TRAINING_DATA_PATH` variable in "run_settings.py". When the model is done training, it will save, so you can load and interact with it later. Then the program will open the Tambereen Max interface (unless `PYTHON_PLAY_AUDIO` is set to "True"), and open a window showing your camera feed. Press the big button labeled "Start / Stop" in the lower left corner of the Max interface to enable audio and hear your sonified movements in real time. When you are done with your interaction, press the "Start / Stop" button in the Max interface, then navigate to the "Terminal" window running the program and press "ctrl-c" on your keyboard. The program will terminate and if you indicate in "run_settings.py" to save your interaction data, it will be written to "output_data_runs" folder.
+    When Tambereen is run, it will initially do some set-up work (e.g. preparing audio models and audio training embeddings), which may take a moment. Then it will display camera feed (i.e. from your computer's built-in camera) in a new window, and you may demonstrate the movements you want to use to interact with it. When you are done demonstrating your movements, press the space bar on your keyboard and the model will train mappings from your demonstrated movements to the audio specified by the `AUDIO_TRAINING_DATA_PATH` variable in "run_settings.py". When the model is done training, it will save, so you can load and interact with it later. Then the program will open the Tambereen Max interface (unless `PYTHON_PLAY_AUDIO` is set to "True"), and open a window showing your camera feed. Press the big button labeled "Start / Stop" in the lower left corner of the Max interface to enable audio and hear your sonified movements in real time. When you are done with your interaction, press the "Start / Stop" button in the Max interface, then navigate to the "Terminal" window running the program and press "ctrl-c" on your keyboard. The program will terminate and if you indicate in "run_settings.py" to save your interaction data, it will be written to "output_data_runs" folder.
 
 
 File structure:
@@ -135,4 +135,4 @@ File structure:
 
 Acknowledgments:
 
-Thank you to Shuoyang Jasper Zheng for helping with early stages of Max integration (including providing the initial RAVE decoder Max patch), and to Ashley Noel-Hirst for helping to convert Max patches into standalone app interfaces. Thank you to Anna Wszeborowska for code-reviewing and helping to improve Tambereen's efficiency and readability.
+Thank you to Shuoyang Jasper Zheng for helping with early stages of Max integration (including providing the initial RAVE decoder Max patch) and with stable audio integration, and to Ashley Noel-Hirst for helping to convert Max patches into standalone app interfaces. Thank you to Anna Wszeborowska for code-reviewing and helping to improve Tambereen's efficiency and readability.
