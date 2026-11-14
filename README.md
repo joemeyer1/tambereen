@@ -1,3 +1,5 @@
+Stable Audio 3 (small) VAE checkpoint: [Google Drive link](https://drive.google.com/file/d/15QQBwJP1_kyBlhPjCZ-sCoe6Hjk7CHOT/view?usp=sharing), it should go to the `pretrained_model_checkpoints/audio_model_checkpoints` folder
+
 Stable Audio Open VAE checkpoint: [Google Drive link](https://drive.google.com/file/d/18J5kuwFjv1uFFq4h5a-XtpsmbhsRX7bn/view?usp=sharing), it should go to the `pretrained_model_checkpoints/audio_model_checkpoints` folder.
 
 ![tambreeen interface](readme_figs/tambereen_interface_screenshot.png)
