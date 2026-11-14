@@ -41,7 +41,7 @@ def train_audio_novelifier(
     if run_settings.audio_novelifier_settings.AUDIO_TRAINING_DATA_PATH is None:
         recent_output_data_run = max((x for x in os.listdir('output_data_runs') if x.isdigit()), key=lambda x: os.path.getmtime(f'output_data_runs/{x}'))
         recent_movement_data_path = f"output_data_runs/{recent_output_data_run}/movement_training_data.mp4"
-        assert os.path.exists(recent_movement_data_path) and os.path.exists(f"output_data_runs/{recent_output_data_run}/model/shared_latent_space_projector.pt"), "Please specify 'run_settings.audio_novelifier_settings.AUDIO_TRAINING_DATA_PATH'"  # make sure model and training data both exist - if they don't, ask user to specify audio training data path to use instead
+        assert os.path.exists(recent_movement_data_path) and os.path.exists(f"output_data_runs/{recent_output_data_run}/model/shared_latent_space_projector.pt"), f"Please specify 'run_settings.audio_novelifier_settings.AUDIO_TRAINING_DATA_PATH' ('{recent_movement_data_path}' or 'output_data_runs/{recent_output_data_run}/model/shared_latent_space_projector.pt' is missing)"  # make sure model and training data both exist - if they don't, ask user to specify audio training data path to use instead
         print(f"Training audio novelifier on audio embeddings mapped from recent movement video {recent_movement_data_path}")
         audio_movement_projector = ModelFileManager.load_model(f"output_data_runs/{recent_output_data_run}/model")
         keypoints_data_for_training = MovementStreamer().record_keypoints(
@@ -51,6 +51,9 @@ def train_audio_novelifier(
         )
         multimodal_movement_embeddings = audio_movement_projector.proj_keypoints_into_multimodal_space(keypoints_data_for_training)
         audio_embeddings = audio_movement_projector.multimodal_projector.decode(multimodal_movement_embeddings)
+        # if run_settings._is_stable_audio_3:  # sa3 needs even num of embeddings to decode
+        #     audio_embeddings = audio_embeddings[:len(audio_embeddings) - len(audio_embeddings) % 2]
+        #     print(f"dbg85039: {audio_embeddings.shape}")
     else:
         # GET MAX AUDIO FRAMES / EMBEDDINGS
         max_audio_frames, max_audio_embeddings = NovelifierTrainer._get_max_audio_frames_and_embeddings(max_audio_secs=run_settings.audio_novelifier_settings.MAX_AUDIO_SECS)
@@ -84,10 +87,10 @@ def train_audio_novelifier(
     print(f"dataset shape: ({audio_embeddings.shape}, {rand_perm_audio_embeddings.shape})")
     audio_embeddings_dataset = CustomDataset(audio_embeddings, metadata=rand_perm_audio_embeddings)
     if run_settings.audio_novelifier_settings.TEST_DATA_FRACTION > 0:
-        train_data, test_data = audio_embeddings_dataset.split(run_settings.audio_novelifier_settings.TEST_DATA_FRACTION)
+        train_data, test_data = audio_embeddings_dataset.split(run_settings.audio_novelifier_settings.TEST_DATA_FRACTION, even_num_test_embs=run_settings._is_stable_audio_3)
     else:
         train_data, test_data = audio_embeddings_dataset, None
-    data_loader = DataLoader(train_data, batch_size=batch_size, shuffle=shuffle_each_epoch)
+    data_loader = DataLoader(train_data, batch_size=batch_size, shuffle=shuffle_each_epoch, drop_last=run_settings._is_stable_audio_3)
 
     # TRAIN
     novelifier_trainer = NovelifierTrainer(pretrained_audio_model=pretrained_audio_model, output_dir_path=output_dir_path, run_settings=run_settings)

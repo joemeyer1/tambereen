@@ -128,8 +128,10 @@ class CustomDataset(Dataset):
         else:
             return self.data[idx]
 
-    def split(self, split_ratio: float) -> Tuple[Dataset, Dataset]:
+    def split(self, split_ratio: float, even_num_test_embs: bool = False) -> Tuple[Dataset, Dataset]:
         split_i = int(split_ratio * len(self.data))
+        if even_num_test_embs and split_i % 2 == 1:
+            split_i -= 1
         print(f"splitting data ({len(self.data) - split_i}, {split_i})")
         if self.metadata is not None:
             return CustomDataset(data=self.data[split_i:], metadata=self.metadata[split_i:]), CustomDataset(data=self.data[:split_i], metadata=self.metadata[:split_i])
