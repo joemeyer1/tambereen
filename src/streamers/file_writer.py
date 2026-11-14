@@ -6,18 +6,19 @@ import os
 from multiprocessing import Queue
 from typing import List
 
-import cv2
+# import cv2
 import ffmpeg
+from fractions import Fraction
 import soundfile as sf
 
 import pandas as pd
 import torch
 
 from src.model_managers.model_file_manager import ModelFileManager
-from src.projectors.movement_projector import MovementProjector
+# from src.projectors.movement_projector import MovementProjector
 from src.streamers.draw_keypoints import draw_keypoints, draw_connections
 from src.streamers.streamer_base import StreamerBase
-from src.time_chunks.MovementChunk import MovementChunk
+# from src.time_chunks.MovementChunk import MovementChunk
 from src.time_chunks.TimeChunk import TimeChunk
 from src.utils import make_name_unique
 
@@ -46,15 +47,22 @@ class FileWriter(StreamerBase):
             )
         if self.run_settings.logging_settings.ENABLE_MOVEMENT_LOGGING:
             self.write_movement_to_file(
-                movement_chunks=[time_chunk.movement_chunk for time_chunk in time_chunks],
+                # movement_chunks=[time_chunk.movement_chunk for time_chunk in time_chunks],
                 output_filename=soundless_video_output_filename,
-                draw_keypoints_to_frame=draw_keypoints_to_frame,
+                # draw_keypoints_to_frame=draw_keypoints_to_frame,
             )
         if self.run_settings.logging_settings.ENABLE_AUDIO_LOGGING and self.run_settings.logging_settings.ENABLE_MOVEMENT_LOGGING:
             self.write_audio_movement_video(
                 # time_chunks=time_chunks,
                 soundless_movement_video_filename=soundless_video_output_filename,
                 audio_filename=audio_output_filename,
+                movement_video_filename=video_output_filename,
+                # chunk_time_ms=chunk_time_ms,
+            )
+            self.write_mixed_audio_movement_video(
+                # time_chunks=time_chunks,
+                soundless_movement_video_filename=soundless_video_output_filename,
+                audio_filename=audio_output_filename.replace('.wav', '_mixed.wav'),
                 movement_video_filename=video_output_filename,
                 # chunk_time_ms=chunk_time_ms,
             )
@@ -70,58 +78,71 @@ class FileWriter(StreamerBase):
             pd.DataFrame(torch.concatenate([time_chunk.audio_chunk.embedding_frames for time_chunk in time_chunks])).to_csv(make_name_unique(f"{model_dir}/audio_output/audio_embeddings.csv"))
 
         audio_movement_projector = ModelFileManager.load_model_back_compat(f"{model_dir}/model")
+        if self.run_settings._is_stable_audio_3 and len(time_chunks) % 2 == 1:
+            time_chunks = time_chunks[:len(time_chunks) - len(time_chunks)%2]
         if audio_movement_projector.novelifier is not None:
-            novelified_embeddings = audio_movement_projector.novelifier.forward(torch.concatenate([time_chunk.audio_chunk.embedding_frames for time_chunk in time_chunks]))
+            novelified_embeddings = audio_movement_projector.novelifier.to('cpu').forward(torch.concatenate([time_chunk.audio_chunk.embedding_frames for time_chunk in time_chunks]).to('cpu'))
             if self.run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
                 pd.DataFrame(novelified_embeddings).to_csv(make_name_unique(f"{model_dir}/audio_output/novelified_audio_embeddings.csv"))
-            novelified_audio = torch.concatenate([audio_movement_projector.decode_audio_embs(novelified_embedding.expand(1, 1, -1).transpose(1, 2)) for novelified_embedding in novelified_embeddings]).flatten()
+
+            novelified_embeddings = novelified_embeddings.transpose(0, 1).expand(1, -1, -1)
+            novelified_audio = audio_movement_projector.decode_audio_embs(novelified_embeddings.to(next(audio_movement_projector.audio_projector.parameters()).device)).detach().cpu().squeeze(0).transpose(0, 1).numpy()
             novelified_audio_output_filename = audio_output_filename.replace('.', '_novelified.')
             sf.write(make_name_unique(novelified_audio_output_filename), novelified_audio, audio_sample_rate)
-        audio_chunks = torch.concatenate([audio_movement_projector.decode_audio_embs(time_chunk.audio_chunk.embedding_frames.expand(1, -1, -1).transpose(1, 2)) for time_chunk in time_chunks])
-        audio_chunks = audio_chunks.flatten()
+        audio_embeddings = torch.cat([time_chunk.audio_chunk.embedding_frames for time_chunk in time_chunks], dim=0)
+        audio_embeddings = audio_embeddings.transpose(0, 1).expand(1, -1, -1)
+        audio_chunks = audio_movement_projector.decode_audio_embs(audio_embeddings.to(next(audio_movement_projector.audio_projector.parameters()).device)).detach().cpu().squeeze(0).transpose(0, 1).numpy()
         sf.write(audio_output_filename, audio_chunks, audio_sample_rate)
 
     def write_movement_to_file(
         self,
-        movement_chunks: List[MovementChunk],
+        # movement_chunks: List[MovementChunk],
         output_filename: str,
-        draw_keypoints_to_frame: bool,
+        # draw_keypoints_to_frame: bool,
     ):
         """Writes recorded movement to file."""
 
-        movement_projector = MovementProjector()
-        movement_projector.load_movement_projector(audio_movement_projector_settings=self.run_settings.audio_movement_projector_settings)
+        if os.path.exists('out.mp4'):
+            os.system(f"cp out.mp4 {output_filename}")
+            os.system(f"mv out.mp4 out0.mp4")
 
-        cap = cv2.VideoCapture(0)
-        frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
-        frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
-        cap.release()
+        # movement_projector = MovementProjector()
+        # movement_projector.load_movement_projector(audio_movement_projector_settings=self.run_settings.audio_movement_projector_settings)
 
-        audio_samples_per_rave_embedding = 2048
-        audio_samples_per_second = 44100
-        rave_embeddings_per_second = audio_samples_per_second / audio_samples_per_rave_embedding
-        fourcc = cv2.VideoWriter_fourcc(*'mp4v')
-        out = cv2.VideoWriter(filename=output_filename, fourcc=fourcc, fps=rave_embeddings_per_second, frameSize=(frame_width, frame_height))
-        for movement_chunk in movement_chunks:
-            frames = movement_chunk.frames
-            for frame in frames:
-                if draw_keypoints_to_frame:
-                    keypoints_with_scores = movement_projector.proj_movement_frame_to_keypoints(movement_frame=frame)
-                    # Rendering
-                    draw_connections(frame, keypoints=keypoints_with_scores)
-                    draw_keypoints(frame, keypoints=keypoints_with_scores)
-                out.write(frame)
-        out.release()
-        cv2.destroyAllWindows()
+        # cap = cv2.VideoCapture(0)
+        # frame_width = int(cap.get(cv2.CAP_PROP_FRAME_WIDTH))
+        # frame_height = int(cap.get(cv2.CAP_PROP_FRAME_HEIGHT))
+        # cap.release()
+
+        # audio_samples_per_audio_embedding = 2048
+        # audio_samples_per_second = 44100
+        # audio_embeddings_per_second = audio_samples_per_second / audio_samples_per_audio_embedding
+        # fourcc = cv2.VideoWriter_fourcc(*'mp4v')
+        # out = cv2.VideoWriter(filename=output_filename, fourcc=fourcc, fps=audio_embeddings_per_second, frameSize=(frame_width, frame_height))
+        # for movement_chunk in movement_chunks:
+        #     frames = movement_chunk.frames
+        #     for frame in frames:
+        #         if draw_keypoints_to_frame:
+        #             keypoints_with_scores = movement_projector.proj_movement_frame_to_keypoints(movement_frame=frame)
+        #             # Rendering
+        #             draw_connections(frame, keypoints=keypoints_with_scores)
+        #             draw_keypoints(frame, keypoints=keypoints_with_scores)
+        #         out.write(frame)
+        # out.release()
+        # cv2.destroyAllWindows()
 
     def write_audio_movement_video(
             self,
             # time_chunks: List[TimeChunk],
             audio_filename: str,
             movement_video_filename: str,
-            soundless_movement_video_filename: str = "trash.mp4",
+            soundless_movement_video_filename: str,
             # chunk_time_ms: int,
     ) -> None:
+        """Used to write movement video frames synced to the raw generated audio they correspond to.
+        
+        Note that video will appear sped up, and will not match the length of the interactively novelified audio (despite matching the length of the raw or fully novelified audio). This is because Max MSP, which the audio mixing interface is implemented in, loops audio frames until the next movement frame is processed, so the mixed audio output may be longer than the movement corresponding to it (and the raw audio - without this frame looping artifact - may be shorter than the real-life movement that generated it, hence the video speed-up when synced to generated audio).
+        """
         # while not os.path.exists(movement_video_filename) or not os.path.exists(audio_filename):
         #     time.sleep(1)
 
@@ -144,3 +165,53 @@ class FileWriter(StreamerBase):
             # ffmpeg.concat(input_video, input_audio, v=1, a=1).output(movement_video_filename).run(capture_stdout=True, capture_stderr=True)
         except ffmpeg.Error as e:
             print(e.stderr.decode('utf-8'))
+
+    def write_mixed_audio_movement_video(
+            self,
+            audio_filename: str,
+            movement_video_filename: str,
+            soundless_movement_video_filename: str,
+    ) -> None:
+        """Stretches video to match duration of Max-produced interactively novelified audio and writes with a "_mixed.mkv" suffix.
+
+        Advantage: With this video writing method, you can hear the mixed, interactively novelified audio while watching video of the dancing.
+        Disadvantage: The movements in the video may not be synced with the audio they generated. This is because the mixed audio includes a looping artifact (see write_audio_movement_video() docstring).
+        """
+
+        def _get_video_duration_secs(input_path: str) -> float:
+            return float(ffmpeg.probe(input_path)["format"].get("duration"))
+
+        def _get_audio_duration_secs(input_path: str) -> float:
+            return sf.info(input_path).duration
+
+        def _get_fps(input_path: str) -> float:
+            """Return the video's average frame rate (frames per second)."""
+            probe = ffmpeg.probe(input_path, select_streams="v:0")
+            return float(Fraction(probe["streams"][0]["avg_frame_rate"]))
+        
+        def sync_video_duration_to_audio(input_path_video: str, input_path_audio: str, output_path: str) -> None:
+            video_fps = _get_fps(input_path_video)
+            video_secs = _get_video_duration_secs(input_path_video)
+            audio_secs = _get_audio_duration_secs(input_path_audio)
+
+            video_rescaling_ratio = audio_secs / video_secs
+            target_fps = video_fps / video_rescaling_ratio  # fps to rescale video with to match mixed audio duration
+
+            video = ffmpeg.input(input_path_video).filter("setpts", f"PTS*{video_rescaling_ratio}")
+            audio = ffmpeg.input(input_path_audio)
+
+            (
+                ffmpeg
+                .output(
+                    video, audio, output_path,
+                    r=target_fps,
+                    vcodec="libx264", pix_fmt="yuv420p",
+                    acodec="copy",
+                )
+                .overwrite_output()
+                .run(capture_stdout=True, capture_stderr=True)
+            )
+
+        mixed_movement_video_filename = f"{movement_video_filename.split('.')[0]}_mixed.mkv"
+        return sync_video_duration_to_audio(input_path_video=soundless_movement_video_filename, input_path_audio=audio_filename, output_path=mixed_movement_video_filename)
+

@@ -12,7 +12,7 @@ import numpy as np
 import pandas as pd
 import torch
 
-from src.model_managers.rave_loader import RaveLoader
+from src.model_managers.audio_model_loader import AudioModelLoader
 from src.trainers.train_audio_novelifier import train_audio_novelifier
 from src.utils import get_audio_data, make_name_unique
 
@@ -23,7 +23,7 @@ def test_audio_novelifier(
         novel_wet_ratio_embeddings: float = 1,
         novel_wet_ratio_audio: float = 1,
         run_settings: RunSettings = RunSettings(
-            RAVE_MODEL='percussion',
+            AUDIO_MODEL='percussion',
             audio_novelifier_settings=AudioNovelifierSettings(PRETRAINED_MODEL_PATH=None, AUDIO_TRAINING_DATA_PATH='audio_training_data/percussion', EPOCHS=10),
         ),
 ):
@@ -31,7 +31,7 @@ def test_audio_novelifier(
     assert 0 <= novel_wet_ratio_embeddings <= 1
     assert 0 <= novel_wet_ratio_audio <= 1
 
-    pretrained_rave_model = RaveLoader().download_official_model_by_name(model_name=run_settings.RAVE_MODEL)
+    pretrained_audio_model = AudioModelLoader().load_model(model_name=run_settings.AUDIO_MODEL)
 
     # GET AUDIO_NOVELIFIER
     pretrained_novelifier_path = run_settings.audio_novelifier_settings.PRETRAINED_MODEL_PATH
@@ -68,12 +68,12 @@ def test_audio_novelifier(
         max_audio_frames = None
     audio_data, audio_sample_rate = get_audio_data(audio_dir_paths=run_settings.audio_movement_projector_settings.AUDIO_TRAINING_DATA_PATH, max_audio_frames=max_audio_frames)
 
-    if len(audio_data.shape) > 1:  # convert to mono
+    if not run_settings._is_stable_audio and len(audio_data.shape) > 1:  # convert to mono
         audio_data = audio_data.mean(1)
 
     # ENCODE AUDIO DATA
     audio_data = torch.from_numpy(audio_data).reshape(1, 1, -1)
-    audio_embeddings = pretrained_rave_model.encode(audio_data)
+    audio_embeddings = pretrained_audio_model.encode(audio_data)
     print(f"audio_embeddings.shape: {audio_embeddings.shape}")
     pd.DataFrame(audio_embeddings[0]).to_csv("audio_embeddings.csv")
 
@@ -81,7 +81,7 @@ def test_audio_novelifier(
     # GENERATE TEST DATA
     audio_output_file_path = f'{output_dir_path}/samples/autoencoded_audio.wav'
     if not os.path.exists(audio_output_file_path):
-        autoencoded_audio = pretrained_rave_model.decode(audio_embeddings).numpy().reshape(-1)
+        autoencoded_audio = pretrained_audio_model.decode(audio_embeddings).numpy().reshape(-1)
         sf.write(audio_output_file_path, autoencoded_audio, audio_sample_rate)
 
     # Novelify then decode embeddings
@@ -91,9 +91,9 @@ def test_audio_novelifier(
 
     if novel_wet_ratio_embeddings < 1:  # add some dry signal to embedding
         balanced_audio_embeddings = (novel_wet_ratio_embeddings * novelified_audio_embeddings) + ((1 - novel_wet_ratio_embeddings) * audio_embeddings)
-        balanced_audio = pretrained_rave_model.decode(balanced_audio_embeddings)
+        balanced_audio = pretrained_audio_model.decode(balanced_audio_embeddings)
 
-        balanced_audio_embeddings_prime = pretrained_rave_model.encode(balanced_audio)
+        balanced_audio_embeddings_prime = pretrained_audio_model.encode(balanced_audio)
         pd.DataFrame(balanced_audio_embeddings_prime[0]).to_csv("balanced_audio_embeddings_prime.csv")
 
         balanced_audio = balanced_audio.numpy().reshape(-1)
@@ -103,9 +103,9 @@ def test_audio_novelifier(
 
     if novel_wet_ratio_audio < 1:  # add some dry signal to audio output
 
-        novelified_audio = pretrained_rave_model.decode(novelified_audio_embeddings)
+        novelified_audio = pretrained_audio_model.decode(novelified_audio_embeddings)
 
-        novelified_audio_embeddings_prime = pretrained_rave_model.encode(novelified_audio)
+        novelified_audio_embeddings_prime = pretrained_audio_model.encode(novelified_audio)
         pd.DataFrame(novelified_audio_embeddings_prime[0]).to_csv("novelified_audio_embeddings_prime.csv")
 
         np_audio_novel = novelified_audio.numpy().reshape(-1)
@@ -115,7 +115,7 @@ def test_audio_novelifier(
                            (1 - novel_wet_ratio_audio) * np_audio_raw[:min_audio_length]
 
     if novel_wet_ratio_audio == 1 and novel_wet_ratio_embeddings == 1:  # all wet novelified
-        balanced_audio = pretrained_rave_model.decode(novelified_audio_embeddings).numpy().reshape(-1)
+        balanced_audio = pretrained_audio_model.decode(novelified_audio_embeddings).numpy().reshape(-1)
 
     novel_wet_ratio_embeddings_str = str(np.round(novel_wet_ratio_embeddings, 3)).replace('.', ',')
     novel_wet_ratio_audio_str = str(np.round(novel_wet_ratio_audio, 3)).replace('.', ',')

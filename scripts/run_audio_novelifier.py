@@ -12,22 +12,22 @@ import numpy as np
 import pandas as pd
 import torch
 
-from src.model_managers.rave_loader import RaveLoader
+from src.model_managers.audio_model_loader import AudioModelLoader
 from src.trainers.train_audio_novelifier import train_audio_novelifier
-from src.utils import get_audio_data, make_name_unique
+from src.utils import get_audio_data, make_name_unique, get_best_device
 
 from run_settings import RunSettings, AudioNovelifierSettings
 
 
 def run_audio_novelifier(
         run_settings: RunSettings = RunSettings(
-            RAVE_MODEL='percussion',
+            AUDIO_MODEL='percussion',
             audio_novelifier_settings=AudioNovelifierSettings(PRETRAINED_MODEL_PATH=None, AUDIO_TRAINING_DATA_PATH='audio_training_data/percussion', EPOCHS=200),
         ),
         test_audio_data_path: str = 'audio_training_data/percussion',
 ):
 
-    pretrained_rave_model = RaveLoader().download_official_model_by_name(model_name=run_settings.RAVE_MODEL)
+    pretrained_audio_model = AudioModelLoader().load_model(model_name=run_settings.AUDIO_MODEL).to(get_best_device())
 
     # GET AUDIO_NOVELIFIER
     pretrained_novelifier_path = run_settings.audio_novelifier_settings.PRETRAINED_MODEL_PATH
@@ -51,7 +51,7 @@ def run_audio_novelifier(
             shuffle_each_epoch=True,
             output_dir_path=output_dir_path,
         )
-        torch.save(audio_novelifier, f'{output_dir_path}/model/audio_novelifier.pt')
+        torch.save(audio_novelifier.to('cpu'), f'{output_dir_path}/model/audio_novelifier.pt')
 
         if run_settings.logging_settings.ENABLE_MODEL_METADATA_LOGGING:
             if not os.path.exists(f"{output_dir_path}/model_metadata"):
@@ -73,20 +73,21 @@ def run_audio_novelifier(
         max_audio_frames = None
     audio_data, audio_sample_rate = get_audio_data(audio_dir_paths=test_audio_data_path, max_audio_frames=max_audio_frames)
 
-    if len(audio_data.shape) > 1:  # convert to mono
+    if not run_settings._is_stable_audio and len(audio_data.shape) > 1:  # convert to mono
         audio_data = audio_data.mean(1)
 
     # Encode test data
-    audio_data = torch.from_numpy(audio_data).reshape(1, 1, -1)
-    audio_embeddings = pretrained_rave_model.encode(audio_data)
+    audio_data = torch.from_numpy(audio_data).reshape(1, 1, -1).to(next(pretrained_audio_model.parameters()).device)
+    audio_embeddings = pretrained_audio_model.encode(audio_data)
     print(f"audio_embeddings.shape: {audio_embeddings.shape}")
     if run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
-        pd.DataFrame(audio_embeddings[0]).to_csv("audio_embeddings.csv")
+        pd.DataFrame(audio_embeddings[0].to('cpu')).to_csv("audio_embeddings.csv")
 
     # Novelify then decode embeddings
-    pre_novelified_audio_embeddings = audio_embeddings.transpose(1, 2)
+    novelifier_device = next(audio_novelifier.parameters()).device
+    pre_novelified_audio_embeddings = audio_embeddings.transpose(1, 2).to(novelifier_device)
     novelified_audio_embeddings = audio_novelifier.forward(pre_novelified_audio_embeddings).transpose(1, 2)
-    pd.DataFrame(novelified_audio_embeddings[0]).to_csv("novelified_audio_embeddings.csv")
+    # pd.DataFrame(novelified_audio_embeddings[0]).to_csv("novelified_audio_embeddings.csv")
 
     # write incrementally novelified audio
     incrementally_novelified_audio_list = []
@@ -94,7 +95,7 @@ def run_audio_novelifier(
     assert novelification_increment > 0
     for novelification_ratio in (float(i / novelification_increment) for i in range(0, novelification_increment + 1)):
         mixed_audio_embeddings = (novelification_ratio * novelified_audio_embeddings) + ((1 - novelification_ratio) * audio_embeddings)
-        mixed_audio = pretrained_rave_model.decode(mixed_audio_embeddings).numpy().reshape(-1)
+        mixed_audio = pretrained_audio_model.decode(mixed_audio_embeddings).to('cpu').numpy().reshape(-1)
 
         novelification_ratio_str = str(np.round(novelification_ratio, 3)).replace('.', ',')
         novelified_filename = make_name_unique(f"{novelified_samples_dir_path}/{novelification_ratio_str}_novelified_audio.wav")

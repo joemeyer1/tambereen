@@ -16,16 +16,17 @@ from src.time_chunks.AudioChunk import AudioChunk
 from src.projectors.movement_projector import MovementProjector
 from src.projectors.keypoints_projector import KeypointsProjector
 from src.projectors.audio_projector import AudioProjector
+from src.projectors.osc_handler import OscHandler
 
-from pythonosc.udp_client import SimpleUDPClient
+# from pythonosc.udp_client import SimpleUDPClient
 
-OSC_IP = "127.0.0.1"
-OSC_PORT = 7004
+# OSC_IP = "127.0.0.1"
+# OSC_PORT = 7004
 
 torch.set_grad_enabled(False)
 
 
-class AudioMovementProjector(MovementProjector, KeypointsProjector, AudioProjector, nn.Module):
+class AudioMovementProjector(MovementProjector, KeypointsProjector, AudioProjector, nn.Module, OscHandler):
     audio_projector: Optional[Any]  # must have "decode()" and "encode()" audio functions (e.g. a pytorch RAVE model)
     movement_projector: Optional[nn.Module]  # a "MovementProjector" class which loads and wraps a pose estimator class (see "projectors.pose_estimaros") projecting image frames to body keypoints coordinates
     # Note: If you want to modify Tambereen to map other input streams to sound instead of using pose estimators on image data, "MovementProjector" and "streamers.movement_streamer.MovementStreamer" are the classes whose functions you should modify
@@ -42,6 +43,7 @@ class AudioMovementProjector(MovementProjector, KeypointsProjector, AudioProject
     ):
 
         nn.Module.__init__(self)
+        OscHandler.__init__(self)
 
         self.audio_projector = audio_projector
         self.movement_projector = movement_projector
@@ -49,8 +51,8 @@ class AudioMovementProjector(MovementProjector, KeypointsProjector, AudioProject
         self.multimodal_projector = multimodal_projector
         self.novelifier = novelifier
 
-        self.osc = SimpleUDPClient(OSC_IP, OSC_PORT)
-        self.address = "/emb"
+        # self.osc = SimpleUDPClient(OSC_IP, OSC_PORT)
+        # self.address = "/emb"
 
     def proj_audio_into_multimodal_space(self, audio_data: np.ndarray, max_audio_frames: Optional[int] = None) -> torch.Tensor:
         """Projects audio data into shared audio-movement latent space."""
@@ -87,7 +89,8 @@ class AudioMovementProjector(MovementProjector, KeypointsProjector, AudioProject
 
         if osc_stream_audio:
             if self.novelifier is not None:
-                audio_embeddings_novelified = torch.squeeze(self.novelifier.forward(audio_embeddings))
+                novelifier_device = next(self.novelifier.parameters()).device
+                audio_embeddings_novelified = torch.squeeze(self.novelifier.forward(audio_embeddings.to(novelifier_device)), dim=1)
                 audio_embedding_novelified_str = ' '.join(str(i) for i in audio_embeddings_novelified.tolist())
                 audio_embedding_novelified_str = re.sub(r"[\[\],]", "", audio_embedding_novelified_str)
                 self.osc.send_message(f"{self.address}_novel", audio_embedding_novelified_str)
@@ -107,5 +110,5 @@ class AudioMovementProjector(MovementProjector, KeypointsProjector, AudioProject
     
     def decode_audio_embs(self, audio_embs: torch.Tensor) -> torch.Tensor:
         decoded_audio = self.audio_projector.decode(audio_embs)
-        decoded_audio = torch.mean(decoded_audio, dim=1, keepdim=True)  # convert to mono
+        # decoded_audio = torch.mean(decoded_audio, dim=1, keepdim=True)  # convert to mono
         return decoded_audio

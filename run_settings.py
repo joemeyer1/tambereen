@@ -10,23 +10,25 @@ from src.projectors.pose_estimators.pose_estimator_movenet import PoseEstimatorM
 from src.projectors.pose_estimators.pose_estimator_mediapipe import PoseEstimatorMediapipe
 
 
-RAVE_MODEL: str  = 'percussion'  # This should be the same for audio-movement projector and audio novelifier
-# see src.model_managers.rave_loader
-# use RaveLoader.load_model_from_file_path(model_file_path=RAVE_MODEL) if you want to load from RAVE_MODEL file path instead of using an official IRCAM model
-# (but if the  RAVE_MODEL is not an official IRCAM model (i.e. from https://acids-ircam.github.io/rave_models_download) then the standard function will load it from local path anyway)
+AUDIO_MODEL: str  = 'percussion'  # This should be the same for audio-movement projector and audio novelifier
+# see src.model_managers.audio_model_loader.
+# use AudioModelLoader.load_model_from_file_path(model_file_path=AUDIO_MODEL) if you want to load from AUDIO_MODEL file path instead of using an official IRCAM model
+# (but if the  AUDIO_MODEL is not an official IRCAM RAVE model (i.e. from https://acids-ircam.github.io/rave_models_download) then the standard function will load it from local path anyway)
 
-_RAVE_MODEL_INTERFACES_MAXPAT = {  # These are included in this repo but you need to install nn_tilde to use (see README.md setup instructions step 2)
+_AUDIO_MODEL_INTERFACES_MAXPAT = {  # These are included in this repo but you need to install nn_tilde to use (see README.md setup instructions step 2)
     'percussion': 'interfaces/tambereen_interface_percussion.maxpat',
     'musicnet': 'interfaces/tambereen_interface_musicnet.maxpat',
     'VCTK': 'interfaces/tambereen_interface_vctk.maxpat',
     'sol_full': 'interfaces/tambereen_interface_sol_full.maxpat',
+    'stable-vae': 'interfaces/tambereen_interface_stable-vae.maxpat',
+    'same-s-nn-tilde': 'interfaces/tambereen_interface_same-s-nn-tilde.maxpat',
 }
-_RAVE_MODEL_INTERFACES_STANDALONE_APP = {  # These will need to be downloaded from https://drive.google.com/drive/folders/1IZOI1tm24UPqegra14_TkFS1Drl81CEU?usp=sharing but avoid the need for installing nn~
+_AUDIO_MODEL_INTERFACES_STANDALONE_APP = {  # These will need to be downloaded from https://drive.google.com/drive/folders/1IZOI1tm24UPqegra14_TkFS1Drl81CEU?usp=sharing but avoid the need for installing nn~
     'percussion': 'interfaces/tambereen_interface_percussion.app',
     'musicnet': 'interfaces/tambereen_interface_musicnet.app',
     'VCTK': 'interfaces/tambereen_interface_vctk.app',
 }
-MAX_INTERFACE_PATH: str = _RAVE_MODEL_INTERFACES_MAXPAT[RAVE_MODEL]
+MAX_INTERFACE_PATH: Optional[str] = _AUDIO_MODEL_INTERFACES_MAXPAT.get(AUDIO_MODEL, None)  # if not specified, AudioMovementStreamer.stream_movement_to_audio() will try to create a new interface for the audio model
 
 
 @dataclass
@@ -55,6 +57,9 @@ class AudioMovementProjectorSettings:
     # If you use a pre-trained model, make sure POSE_ESTIMATOR_TYPE aligns
     # If you try using a different pose estimator than the model was trained with, the pose keypoints passed won't align with those the model was trained with and you will get a tensor size mismatch error between actual input and model input dimensions
 
+    AUDIO_TRAINING_DATA_PATH: str = 'audio_training_data/percussion'
+    MOVEMENT_TRAINING_DATA_PATH: Optional[str] = None  # this can be set to movement video file path (e.g. "output_data_runs/0/movement_training_data.mp4"); if None then record new movement
+
     PYTHON_PLAY_AUDIO: bool = False
     CHUNK_BUFFER_SIZE: int = 1  # number of embedding frames to store in each time chunk
     # Higher CHUNK_BUFFER_SIZE -> more latency
@@ -62,9 +67,7 @@ class AudioMovementProjectorSettings:
     # But for streaming audio in Python, each audio play() call is expensive, so better to bundle multiple audio embedding frames into each time chunk passed to play() (e.g. CHUNK_BUFFER_SIZE=10)
 
     pose_estimator_settings: PoseEstimatorSettings = PoseEstimatorSettings()
-    MOVEMENT_TRAINING_DATA_PATH: Optional[str] = None  # this can be set to movement video file path (e.g. "output_data_runs/0/movement_training_data.mp4"); if None then record new movement
 
-    AUDIO_TRAINING_DATA_PATH: str = 'audio_training_data/percussion'
     USE_CACHE: bool = False  # For training data
     MAX_AUDIO_SECS: Optional[float] = 30
 
@@ -94,6 +97,9 @@ class RunSettings:
     audio_movement_projector_settings: Optional[AudioMovementProjectorSettings] = AudioMovementProjectorSettings()
     audio_novelifier_settings: Optional[AudioNovelifierSettings] = AudioNovelifierSettings()
     logging_settings: Optional[LoggingSettings] = LoggingSettings()
-    RAVE_MODEL: Optional[str] = RAVE_MODEL
+    AUDIO_MODEL: Optional[str] = AUDIO_MODEL
     MAX_INTERFACE_PATH: Optional[str] = MAX_INTERFACE_PATH
+
+    _is_stable_audio: bool = AUDIO_MODEL in ['same-s-nn-tilde', 'stable-vae']
+    _is_stable_audio_3: bool = AUDIO_MODEL  == 'same-s-nn-tilde'
 

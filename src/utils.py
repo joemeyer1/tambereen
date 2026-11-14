@@ -10,6 +10,8 @@ import soundfile as sf
 import torch
 from torch.utils.data import Dataset
 
+from run_settings import RunSettings
+
 
 def make_name_unique(name: str) -> str:
 
@@ -98,6 +100,20 @@ def convert_file_to_wav(existing_filename: str, new_filename: str):
     sound.export(new_filename, format="wav")
 
 
+def get_best_device() -> str:
+    """Returns the name of most powerful available device for running neural networks."""
+
+    if not RunSettings._is_stable_audio:
+        return 'cpu'
+
+    if torch.cuda.is_available():
+        return 'cuda'
+    elif torch.backends.mps.is_available():
+        return 'mps'
+    else:
+        return 'cpu'
+    
+
 class CustomDataset(Dataset):
     def __init__(self, data: torch.Tensor, metadata: Optional[torch.Tensor] = None):
         self.data = data
@@ -112,8 +128,10 @@ class CustomDataset(Dataset):
         else:
             return self.data[idx]
 
-    def split(self, split_ratio: float) -> Tuple[Dataset, Dataset]:
+    def split(self, split_ratio: float, even_num_test_embs: bool = False) -> Tuple[Dataset, Dataset]:
         split_i = int(split_ratio * len(self.data))
+        if even_num_test_embs and split_i % 2 == 1:
+            split_i = max(split_i - 1, 2)
         print(f"splitting data ({len(self.data) - split_i}, {split_i})")
         if self.metadata is not None:
             return CustomDataset(data=self.data[split_i:], metadata=self.metadata[split_i:]), CustomDataset(data=self.data[:split_i], metadata=self.metadata[:split_i])
@@ -124,3 +142,8 @@ class CustomDataset(Dataset):
         self.data = self.data[torch.randperm(self.data.shape[0])]
         if self.metadata is not None:
             self.metadata = self.metadata[torch.randperm(self.metadata.shape[0])]
+
+    def move_to_device(self, device: str):
+        self.data = self.data.to(device)
+        if self.metadata is not None:
+            self.metadata = self.metadata.to(device)

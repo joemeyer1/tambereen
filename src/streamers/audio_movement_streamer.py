@@ -8,6 +8,8 @@ from src.streamers.file_writer import FileWriter
 from src.streamers.movement_streamer import MovementStreamer
 from src.utils import make_name_unique
 
+from interfaces.make_maxpat import make_maxpat
+
 
 class AudioMovementStreamer(MovementStreamer, AudioStreamer, AudioPlayer):
 
@@ -19,7 +21,13 @@ class AudioMovementStreamer(MovementStreamer, AudioStreamer, AudioPlayer):
             tambereen_interface_path: str = 'interfaces/tambereen_interface_percussion.maxpat'
     ):
         
+        assert os.path.exists(f"pretrained_model_checkpoints/audio_model_checkpoints/{self.run_settings.AUDIO_MODEL}.ts")
         if not python_play_audio:
+            if not os.path.exists(tambereen_interface_path):
+                make_maxpat(self.run_settings.AUDIO_MODEL)
+                tambereen_interface_path = f'interfaces/tambereen_interface_{self.run_settings.AUDIO_MODEL}.maxpat'
+            if not os.path.exists(f"interfaces/{self.run_settings.AUDIO_MODEL}.ts"):
+                os.system(f"cp pretrained_model_checkpoints/audio_model_checkpoints/{self.run_settings.AUDIO_MODEL}.ts interfaces/{self.run_settings.AUDIO_MODEL}.ts")
             os.system(f"open {tambereen_interface_path}")
 
         output_movement_dir = f"{model_dir}/movement_output"
@@ -62,6 +70,8 @@ class AudioMovementStreamer(MovementStreamer, AudioStreamer, AudioPlayer):
             if python_play_audio:
                 stream_play_audio_proc.join()
         except KeyboardInterrupt:
+            print("\nInteraction terminated by user (KeyboardInterrupt).")
+        finally:
             if self.run_settings.logging_settings.ENABLE_AUDIO_LOGGING or self.run_settings.logging_settings.ENABLE_MOVEMENT_LOGGING:
                 print(f"\nwriting files...")
                 FileWriter(run_settings=self.run_settings).write_files(

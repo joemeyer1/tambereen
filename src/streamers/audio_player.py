@@ -33,7 +33,8 @@ class AudioPlayer(StreamerBase):
 
                 time_chunk: TimeChunk = audio_queue.get()
                 if time_chunk.audio_chunk.wav_data is None:
-                    time_chunk.audio_chunk.wav_data = audio_movement_projector.decode_audio_embs(time_chunk.audio_chunk.embedding_frames.expand(1, -1, -1).transpose(1, 2)).flatten().numpy()
+                    audio_embeddings = audio_embeddings.transpose(0, 1).expand(1, -1, -1)
+                    time_chunk.audio_chunk.wav_data = audio_movement_projector.decode_audio_embs(audio_embeddings.to(next(audio_movement_projector.audio_projector.parameters()).device)).to('cpu').numpy()
                     sd.play(time_chunk.audio_chunk.wav_data, samplerate=audio_sample_rate)
                 time_chunks.append(time_chunk)
 

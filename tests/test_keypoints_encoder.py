@@ -21,7 +21,7 @@ def test_keypoints_encoder(epochs: int, max_frames: int):
     pd.DataFrame(normalized_keypoints_data_for_training).to_csv('normalized_keypoints_data_for_training.csv')  # for debugging
 
 
-    # train encoder to project keypoints into a latent space of same dimension as RAVE's latent space (e.g. "4")
+    # train encoder to project keypoints into a latent space of same dimension as the audio model's latent space (e.g. "4")
     keypoints_encoder = train_autoencoder(
         input_dim=17 * 2,
         dense_dim=16,
