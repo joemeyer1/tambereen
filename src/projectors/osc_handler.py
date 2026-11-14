@@ -18,7 +18,7 @@ class OscHandler:
         self.osc = SimpleUDPClient(OSC_IP, OSC_SEND_PORT)
         self.address = "/emb"
 
-    def send_on_signal_and_wait(self, timeout: float = 30.0) -> None:
+    def send_on_signal_and_wait(self, timeout: float = 5.0) -> None:
         acknowledgement_received = threading.Event()
         dispatcher = Dispatcher()
         dispatcher.map(OSC_ACK_ADDRESS, lambda address, *args: acknowledgement_received.set())
@@ -27,11 +27,12 @@ class OscHandler:
             server_thread = threading.Thread(target=server.serve_forever, daemon=True)
             server_thread.start()
             try:
-                self.osc.send_message("/on", 1)
-                if not acknowledgement_received.wait(timeout):
-                    raise TimeoutError("No ack from Max for /on")
+                for attempt in range(8):
+                    self.osc.send_message("/on", 1)
+                    if acknowledgement_received.wait(timeout):
+                        break
             except TimeoutError:
-                print("Max interface will need to be turned on manually.")
+                print("\nNo OSC response received. Max interface will need to be turned on manually.\n")
             finally:
                 server.shutdown()
                 server_thread.join()
