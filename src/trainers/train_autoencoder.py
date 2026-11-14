@@ -91,7 +91,7 @@ def train_autoencoder(
                             print("Overfit detected, stopping training")
                             break
             except KeyboardInterrupt:
-                print("Training interrupted by user (KeyboardInterrupt).")
+                print("\nTraining interrupted by user (KeyboardInterrupt).")
                 break
     print(f'Done training {model_name}')
     try:  # if the user manually interrupts training within a half second of it finishing, they probably meant to interrupt training and don't actually want to kill the program
