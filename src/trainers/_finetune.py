@@ -82,7 +82,7 @@ def finetune(
                             print("Overfit detected, stopping training")
                             break
             except KeyboardInterrupt:
-                print("Training interrupted by user (KeyboardInterrupt).")
+                print("\nTraining interrupted by user (KeyboardInterrupt).")
                 break
     print(f'Done training {model_name}')
     if best_model_state_dict is not None:

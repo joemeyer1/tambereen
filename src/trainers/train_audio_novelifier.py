@@ -231,7 +231,7 @@ class NovelifierTrainer(EmbeddingsAssessor):
                                     break
 
                 except KeyboardInterrupt:
-                    print("Training interrupted by user (KeyboardInterrupt).")
+                    print("\nTraining interrupted by user (KeyboardInterrupt).")
                     break
             torch.set_grad_enabled(False)
             print(f'Done training submodules {name_to_optim_objective.keys()}')
