@@ -60,7 +60,7 @@ class MovementStreamer(StreamerBase):
                     if self.run_settings.logging_settings.ENABLE_MOVEMENT_LOGGING:
                         if not self.run_settings._is_stable_audio_3 or is_odd_frame:
                             out.write(frame)
-                    if cv2.waitKey(1) & 0xFF == ord(' '):
+                    if cv2.waitKey(1) & 0xFF in (ord(' '), ord('q')):
                         if not self.run_settings.audio_movement_projector_settings.PYTHON_PLAY_AUDIO:
                             movement_projector.osc.send_message("/on", 0)
                         cap.release()
@@ -148,7 +148,7 @@ class MovementStreamer(StreamerBase):
             if output_filename and self.run_settings.logging_settings.ENABLE_MOVEMENT_LOGGING:
                 out.write(frame)
 
-            if cv2.waitKey(1) & 0xFF == ord(' '):
+            if cv2.waitKey(1) & 0xFF in (ord(' '), ord('q')):
                 break
 
             frame_i += 1
