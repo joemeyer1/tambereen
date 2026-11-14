@@ -31,7 +31,7 @@ def run_tambereen(run_settings=RunSettings()):
             pretrained_model_path=run_settings.audio_movement_projector_settings.PRETRAINED_MODEL_PATH,
             submodule_path='shared_latent_space_projector.pt',
         ):
-            for submodule in ('audio_projector.pt', 'keypoints_projector.pt', 'shared_latent_space_projector.pt'):
+            for submodule in ('audio_projector.pt', 'keypoints_projector.pt', 'shared_latent_space_projector.pt', 'audio_projector.ts'):
                 print(f"loading audio-movement projector {run_settings.audio_movement_projector_settings.PRETRAINED_MODEL_PATH}/model/{submodule}")
                 os.system(f"cp {run_settings.audio_movement_projector_settings.PRETRAINED_MODEL_PATH}/model/{submodule} {model_path}/model/{submodule}")
         else:

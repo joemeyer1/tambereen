@@ -8,6 +8,7 @@ from typing import List
 
 import cv2
 import ffmpeg
+from fractions import Fraction
 import soundfile as sf
 
 import pandas as pd
@@ -52,6 +53,13 @@ class FileWriter(StreamerBase):
             )
         if self.run_settings.logging_settings.ENABLE_AUDIO_LOGGING and self.run_settings.logging_settings.ENABLE_MOVEMENT_LOGGING:
             self.write_audio_movement_video(
+                # time_chunks=time_chunks,
+                soundless_movement_video_filename=soundless_video_output_filename,
+                audio_filename=audio_output_filename,
+                movement_video_filename=video_output_filename,
+                # chunk_time_ms=chunk_time_ms,
+            )
+            self.write_mixed_audio_movement_video(
                 # time_chunks=time_chunks,
                 soundless_movement_video_filename=soundless_video_output_filename,
                 audio_filename=audio_output_filename,
@@ -133,9 +141,13 @@ class FileWriter(StreamerBase):
             # time_chunks: List[TimeChunk],
             audio_filename: str,
             movement_video_filename: str,
-            soundless_movement_video_filename: str = "trash.mp4",
+            soundless_movement_video_filename: str,
             # chunk_time_ms: int,
     ) -> None:
+        """Used to write movement video frames synced to the raw generated audio they correspond to.
+        
+        Note that video will appear sped up, and will not match the length of the interactively novelified audio (despite matching the length of the raw or fully novelified audio). This is because Max MSP, which the audio mixing interface is implemented in, loops audio frames until the next movement frame is processed, so the mixed audio output may be longer than the movement corresponding to it (and the raw audio - without this frame looping artifact - may be shorter than the real-life movement that generated it, hence the video speed-up when synced to generated audio).
+        """
         # while not os.path.exists(movement_video_filename) or not os.path.exists(audio_filename):
         #     time.sleep(1)
 
@@ -158,3 +170,53 @@ class FileWriter(StreamerBase):
             # ffmpeg.concat(input_video, input_audio, v=1, a=1).output(movement_video_filename).run(capture_stdout=True, capture_stderr=True)
         except ffmpeg.Error as e:
             print(e.stderr.decode('utf-8'))
+
+    def write_mixed_audio_movement_video(
+            self,
+            audio_filename: str,
+            movement_video_filename: str,
+            soundless_movement_video_filename: str,
+    ) -> None:
+        """Stretches video to match duration of Max-produced interactively novelified audio and writes with a "_mixed.mkv" suffix.
+
+        Advantage: With this video writing method, you can hear the mixed, interactively novelified audio while watching video of the dancing.
+        Disadvantage: The movements in the video may not be synced with the audio they generated. This is because the mixed audio includes a looping artifact (see write_audio_movement_video() docstring).
+        """
+
+        def _get_video_duration_secs(input_path: str) -> float:
+            return float(ffmpeg.probe(input_path)["format"].get("duration"))
+
+        def _get_audio_duration_secs(input_path: str) -> float:
+            return sf.info(input_path).duration
+
+        def _get_fps(input_path: str) -> float:
+            """Return the video's average frame rate (frames per second)."""
+            probe = ffmpeg.probe(input_path, select_streams="v:0")
+            return float(Fraction(probe["streams"][0]["avg_frame_rate"]))
+        
+        def sync_video_duration_to_audio(input_path_video: str, input_path_audio: str, output_path: str) -> None:
+            video_fps = _get_fps(input_path_video)
+            video_secs = _get_video_duration_secs(input_path_video)
+            audio_secs = _get_audio_duration_secs(input_path_audio)
+
+            video_rescaling_ratio = audio_secs / video_secs
+            target_fps = video_fps / video_rescaling_ratio  # fps to rescale video with to match mixed audio duration
+
+            video = ffmpeg.input(input_path_video).filter("setpts", f"PTS*{video_rescaling_ratio}")
+            audio = ffmpeg.input(input_path_audio)
+
+            (
+                ffmpeg
+                .output(
+                    video, audio, output_path,
+                    r=target_fps,
+                    vcodec="libx264", pix_fmt="yuv420p",
+                    acodec="copy",
+                )
+                .overwrite_output()
+                .run(capture_stdout=True, capture_stderr=True)
+            )
+
+        mixed_movement_video_filename = f"{movement_video_filename.split('.')[0]}_mixed.mkv"
+        return sync_video_duration_to_audio(input_path_video=soundless_movement_video_filename, input_path_audio=audio_filename, output_path=mixed_movement_video_filename)
+
