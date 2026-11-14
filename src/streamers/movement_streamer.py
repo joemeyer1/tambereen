@@ -41,7 +41,8 @@ class MovementStreamer(StreamerBase):
             out = cv2.VideoWriter(filename="out.mp4", fourcc=fourcc, fps=audio_embeddings_per_second, frameSize=(frame_width, frame_height))
         
         cv2.startWindowThread()
-
+        if not self.run_settings.audio_movement_projector_settings.PYTHON_PLAY_AUDIO:
+            movement_projector.send_on_signal_and_wait()
         is_odd_frame = True
         while cap.isOpened():
             try:
@@ -60,6 +61,8 @@ class MovementStreamer(StreamerBase):
                         if not self.run_settings._is_stable_audio_3 or is_odd_frame:
                             out.write(frame)
                     if cv2.waitKey(1) & 0xFF == ord(' '):
+                        if not self.run_settings.audio_movement_projector_settings.PYTHON_PLAY_AUDIO:
+                            movement_projector.osc.send_message("/on", 0)
                         cap.release()
                         cv2.destroyAllWindows()
                         return

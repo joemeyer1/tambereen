@@ -70,6 +70,8 @@ class AudioMovementStreamer(MovementStreamer, AudioStreamer, AudioPlayer):
             if python_play_audio:
                 stream_play_audio_proc.join()
         except KeyboardInterrupt:
+            print("\nInteraction interrupted by user (KeyboardInterrupt).")
+        finally:
             if self.run_settings.logging_settings.ENABLE_AUDIO_LOGGING or self.run_settings.logging_settings.ENABLE_MOVEMENT_LOGGING:
                 print(f"\nwriting files...")
                 FileWriter(run_settings=self.run_settings).write_files(
