@@ -84,18 +84,13 @@ class FileWriter(StreamerBase):
             novelified_embeddings = audio_movement_projector.novelifier.to('cpu').forward(torch.concatenate([time_chunk.audio_chunk.embedding_frames for time_chunk in time_chunks]).to('cpu'))
             if self.run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
                 pd.DataFrame(novelified_embeddings).to_csv(make_name_unique(f"{model_dir}/audio_output/novelified_audio_embeddings.csv"))
-            # fmt = '\n'.join([str(novelified_embedding.shape) for novelified_embedding in novelified_embeddings])
-            # print(f'dbg4398:: {novelified_embeddings.shape}')
 
             novelified_embeddings = novelified_embeddings.transpose(0, 1).expand(1, -1, -1)
-            # print(f'dbg0398:: {novelified_embeddings.shape}')
             novelified_audio = audio_movement_projector.decode_audio_embs(novelified_embeddings.to(next(audio_movement_projector.audio_projector.parameters()).device)).detach().cpu().squeeze(0).transpose(0, 1).numpy()
             novelified_audio_output_filename = audio_output_filename.replace('.', '_novelified.')
             sf.write(make_name_unique(novelified_audio_output_filename), novelified_audio, audio_sample_rate)
         audio_embeddings = torch.cat([time_chunk.audio_chunk.embedding_frames for time_chunk in time_chunks], dim=0)
-        # print(f"dbg4380: {audio_embeddings.shape}")
         audio_embeddings = audio_embeddings.transpose(0, 1).expand(1, -1, -1)
-        # print(f"dbg4380: {audio_embeddings.shape}")
         audio_chunks = audio_movement_projector.decode_audio_embs(audio_embeddings.to(next(audio_movement_projector.audio_projector.parameters()).device)).detach().cpu().squeeze(0).transpose(0, 1).numpy()
         sf.write(audio_output_filename, audio_chunks, audio_sample_rate)
 
