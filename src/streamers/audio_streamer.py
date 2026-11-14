@@ -52,6 +52,7 @@ class AudioStreamer(StreamerBase):
 
 
             except KeyboardInterrupt:
+                audio_movement_projector.osc.send_message("/on", 0)
                 if not python_play_audio:
                     audio_queue.put(time_chunks)
                 return

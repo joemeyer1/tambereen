@@ -13,6 +13,8 @@ from src.projectors.pose_estimators.pose_estimator_base import PoseEstimatorBase
 from src.projectors.pose_estimators.pose_estimator_mediapipe import PoseEstimatorMediapipe
 from src.projectors.pose_estimators.pose_estimator_movenet import PoseEstimatorMoveNet
 
+from src.projectors.osc_handler import OscHandler
+
 from run_settings import AudioMovementProjectorSettings
 
 torch.set_grad_enabled(False)
@@ -25,6 +27,7 @@ class MovementProjector(nn.Module):
 
     def __init__(self):
         nn.Module.__init__(self)
+        OscHandler.__init__(self)
 
     def load_movement_projector(self, audio_movement_projector_settings: AudioMovementProjectorSettings = AudioMovementProjectorSettings()):
 
