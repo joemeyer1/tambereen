@@ -27,12 +27,14 @@ class OscHandler:
             server_thread = threading.Thread(target=server.serve_forever, daemon=True)
             server_thread.start()
             try:
+                is_ack_received = False
                 for attempt in range(8):
                     self.osc.send_message("/on", 1)
                     if acknowledgement_received.wait(timeout):
+                        is_ack_received = True
                         break
-            except TimeoutError:
-                print("\nNo OSC response received. Max interface will need to be turned on manually.\n")
+                if not is_ack_received:
+                    print("\nNo OSC response received. Max interface will need to be turned on manually.\n")
             finally:
                 server.shutdown()
                 server_thread.join()
