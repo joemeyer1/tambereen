@@ -6,7 +6,7 @@ import os
 from multiprocessing import Queue
 from typing import List
 
-import cv2
+# import cv2
 import ffmpeg
 from fractions import Fraction
 import soundfile as sf
@@ -15,10 +15,10 @@ import pandas as pd
 import torch
 
 from src.model_managers.model_file_manager import ModelFileManager
-from src.projectors.movement_projector import MovementProjector
+# from src.projectors.movement_projector import MovementProjector
 from src.streamers.draw_keypoints import draw_keypoints, draw_connections
 from src.streamers.streamer_base import StreamerBase
-from src.time_chunks.MovementChunk import MovementChunk
+# from src.time_chunks.MovementChunk import MovementChunk
 from src.time_chunks.TimeChunk import TimeChunk
 from src.utils import make_name_unique
 
