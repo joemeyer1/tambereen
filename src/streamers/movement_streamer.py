@@ -3,7 +3,6 @@ import os
 import time
 from multiprocessing import Queue
 from typing import Optional
-import time
 
 import cv2
 import numpy as np
@@ -42,8 +41,8 @@ class MovementStreamer(StreamerBase):
             out = cv2.VideoWriter(filename="out.mp4", fourcc=fourcc, fps=audio_embeddings_per_second, frameSize=(frame_width, frame_height))
         
         cv2.startWindowThread()
-        time.sleep(8)
-        movement_projector.osc.send_message("/on", 1)
+        if not self.run_settings.audio_movement_projector_settings.PYTHON_PLAY_AUDIO:
+            movement_projector.send_on_signal_and_wait()
         is_odd_frame = True
         while cap.isOpened():
             try:

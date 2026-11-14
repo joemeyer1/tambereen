@@ -62,7 +62,7 @@ class FileWriter(StreamerBase):
             self.write_mixed_audio_movement_video(
                 # time_chunks=time_chunks,
                 soundless_movement_video_filename=soundless_video_output_filename,
-                audio_filename=audio_output_filename,
+                audio_filename=audio_output_filename.replace('.wav', '_mixed.wav'),
                 movement_video_filename=video_output_filename,
                 # chunk_time_ms=chunk_time_ms,
             )

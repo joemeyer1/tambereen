@@ -20,7 +20,7 @@ from run_settings import AudioMovementProjectorSettings
 torch.set_grad_enabled(False)
 
 
-class MovementProjector(nn.Module):
+class MovementProjector(nn.Module, OscHandler):
     """Projects movement into keypoints."""
 
     pose_estimator: PoseEstimatorBase
