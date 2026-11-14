@@ -51,9 +51,6 @@ def train_audio_novelifier(
         )
         multimodal_movement_embeddings = audio_movement_projector.proj_keypoints_into_multimodal_space(keypoints_data_for_training)
         audio_embeddings = audio_movement_projector.multimodal_projector.decode(multimodal_movement_embeddings)
-        # if run_settings._is_stable_audio_3:  # sa3 needs even num of embeddings to decode
-        #     audio_embeddings = audio_embeddings[:len(audio_embeddings) - len(audio_embeddings) % 2]
-        #     print(f"dbg85039: {audio_embeddings.shape}")
     else:
         # GET MAX AUDIO FRAMES / EMBEDDINGS
         max_audio_frames, max_audio_embeddings = NovelifierTrainer._get_max_audio_frames_and_embeddings(max_audio_secs=run_settings.audio_novelifier_settings.MAX_AUDIO_SECS)
