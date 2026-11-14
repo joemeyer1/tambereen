@@ -86,7 +86,6 @@ class MovementStreamer(StreamerBase):
                 else:
                     is_odd_frame = True
 
-                # time.sleep(2048/44100)
                 if self.run_settings.logging_settings.ENABLE_DEBUG_LOGGING:
                     chunk_time_end = time.time_ns()
                     print(f"mv->: {(chunk_time_end - chunk_time_start) / 1e6} ms")

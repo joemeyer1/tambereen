@@ -23,7 +23,7 @@ def train_audio_movement_projector(output_dir_path: str, run_settings: RunSettin
 
     pretrained_audio_model = AudioModelLoader().load_model(model_name=run_settings.AUDIO_MODEL)
 
-    AUDIO_EMBS_PER_SEC = 2048
+    AUDIO_EMBS_PER_SEC = 4096 if run_settings._is_stable_audio_3 else 2048
     if run_settings.audio_movement_projector_settings.MAX_AUDIO_SECS is not None:
         max_training_frames = int(run_settings.audio_movement_projector_settings.MAX_AUDIO_SECS * AUDIO_EMBS_PER_SEC)
     else:

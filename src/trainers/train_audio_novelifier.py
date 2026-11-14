@@ -311,7 +311,7 @@ class NovelifierTrainer(EmbeddingsAssessor):
             samples_per_sec = 44100
             max_audio_frames = int(max_audio_secs * samples_per_sec)
 
-            samples_per_embedding = 2048
+            samples_per_embedding = 4096 if RunSettings._is_stable_audio_3 else 2048
             embeddings_per_sec = samples_per_sec / samples_per_embedding
             max_audio_embeddings = int(max_audio_secs * embeddings_per_sec)
         else:
