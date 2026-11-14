@@ -19,11 +19,11 @@ _[A video demonstration of Tambereen's features can be found on Youtube (by clic
 
 To set up (on a Mac):
 
-1. Download this GitHub repository https://github.com/joemeyer1/movement-to-sound-generation
+1. Download this GitHub repository https://github.com/joemeyer1/tambereen
 
     If you aren't familiar with Git or Python, do the following:
     
-    - Navigate to https://github.com/joemeyer1/movement-to-sound-generation in your web browser
+    - Navigate to https://github.com/joemeyer1/tambereen in your web browser
     - Click the green "Code" tab in the upper right corner of the web page
     - Click "Download Zip"
     - After repository has downloaded, go to your "Downloads" folder and double-click the zip file
@@ -49,7 +49,7 @@ To set up (on a Mac):
 
     If you aren't familiar with Git or Python, do the following:
     
-    - Type ```cd ~/Downloads/movement-to-sound-generation-main``` into Terminal window, then press "Enter" key
+    - Type ```cd ~/Downloads/tambereen-main``` into Terminal window, then press "Enter" key
     
 5. Copy the following block of commands into Terminal window, then press "Enter" key:
 
@@ -74,7 +74,7 @@ To set up (on a Mac):
     - Once the software is installed, you can run it any time by opening "Terminal" application, copying and pasting the following code block into the Terminal window, then pressing "Enter" key:
 
         ```
-        cd ~/Downloads/movement-to-sound-generation-main
+        cd ~/Downloads/tambereen-main
     
         source env/bin/activate
     
