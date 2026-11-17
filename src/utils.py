@@ -54,6 +54,10 @@ def get_audio_data(audio_dir_paths: Union[str, Tuple[str, ...]] = 'audio_trainin
     if type(audio_dir_paths) is str:
         audio_dir_paths = (audio_dir_paths,)
     for audio_dir_path in audio_dir_paths:
+        if not _is_all_wav(audio_dir_path):
+            print(f"'{audio_dir_path}' contains non-wav files, converting to wav in new folder '{audio_dir_path}_wav'.\n")
+            convert_folder_to_wav(audio_dir_path, f'{audio_dir_path}_wav')
+            audio_dir_path = f'{audio_dir_path}_wav'
         for audio_filename in os.listdir(audio_dir_path):
             max_audio_frames_reached = max_audio_frames is not None and sum(len(audio_file_data) for audio_file_data in audio_data) >= max_audio_frames
             if max_audio_frames_reached:
@@ -98,6 +102,12 @@ def convert_file_to_wav(existing_filename: str, new_filename: str):
     from pydub import AudioSegment
     sound = AudioSegment.from_file(existing_filename)
     sound.export(new_filename, format="wav")
+
+def _is_all_wav(audio_dir_path):
+    for audio_filename in os.listdir(audio_dir_path):
+        if audio_filename[-4:] != '.wav' and audio_filename != '.DS_Store':
+            return False
+    return True
 
 
 def get_best_device() -> str:
