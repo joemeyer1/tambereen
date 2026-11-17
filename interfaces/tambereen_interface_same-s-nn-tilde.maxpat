@@ -46,9 +46,6 @@
 					"numinlets" : 1,
 					"numoutlets" : 0,
 					"patching_rect" : [ 1654.0, 503.0, 216.0, 29.0 ],
-					"presentation" : 1,
-					"presentation_linecount" : 2,
-					"presentation_rect" : [ 427.000006139278412, 97.0, 147.0, 51.0 ],
 					"text" : "Audio Settings Init"
 				}
 
