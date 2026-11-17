@@ -104,6 +104,7 @@ def convert_file_to_wav(existing_filename: str, new_filename: str):
     sound.export(new_filename, format="wav")
 
 def _is_all_wav(audio_dir_path):
+    """Helper for get_audio_data(). Returns True if and only if all files in audio_dir_path are '.wav' files."""
     for audio_filename in os.listdir(audio_dir_path):
         if audio_filename[-4:] != '.wav' and audio_filename != '.DS_Store':
             return False
